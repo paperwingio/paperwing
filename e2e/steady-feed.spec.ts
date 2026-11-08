@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { feed, gotoFeed, row } from './support/app'
 import { expect, test } from './support/test'
 import { NOW, story } from '../src/test/fixtures'
@@ -54,22 +55,47 @@ test('a source that answers late waits behind a button instead of reshuffling th
   await expect(waiting).toBeHidden()
 })
 
-test('refreshing brings the new order in without asking', async ({ page }) => {
+const isLate = (url: URL) => url.pathname === '/api/feed' && url.searchParams.get('label') === 'France 24'
+/** Holds France 24's answer until `release` is called. */
+async function holdLate(page: Page) {
   let release = () => {}
   const released = new Promise<void>((r) => (release = r))
   let held = true
-  await page.route(
-    (url) => url.pathname === '/api/feed' && url.searchParams.get('label') === 'France 24',
-    async (route) => {
-      if (held) await released
-      await route.fallback()
-    },
-  )
+  await page.route(isLate, async (route) => {
+    if (held) await released
+    await route.fallback()
+  })
+  return () => {
+    held = false
+    release()
+  }
+}
+/** How far the feed is scrolled: the page on a phone, the list beside the reading pane on a desktop. */
+const scrolled = (page: Page) => page.evaluate(() => Math.max(window.scrollY, document.getElementById('list-scroll')?.scrollTop ?? 0))
+
+test('refreshing brings the new order in, from the top', async ({ page }) => {
+  const release = await holdLate(page)
   await gotoFeed(page, 'world-news')
-  held = false
   release()
   await expect(page.getByRole('button', { name: '1 new story' })).toBeVisible()
+  await page.evaluate(() => {
+    window.scrollTo(0, 800)
+    const list = document.getElementById('list-scroll')
+    if (list) list.scrollTop = 800
+  })
   await page.getByRole('button', { name: /^Refresh/ }).click()
   await expect(row(page, late.title)).toBeVisible()
+  await expect(page.getByRole('button', { name: /new stor/ })).toHaveCount(0)
+  await expect.poll(() => scrolled(page)).toBe(0)
+})
+
+test('with a filter on, only stories the filter shows count as new', async ({ page }) => {
+  const release = await holdLate(page)
+  await page.goto('/t/world-news?src=lemmy')
+  await expect(feed(page).getByRole('article').first()).toBeVisible()
+  const answered = page.waitForResponse((r) => isLate(new URL(r.url())))
+  release()
+  await answered
+  // France 24's story is RSS, which a Lemmy-only view doesn't show: nothing to offer.
   await expect(page.getByRole('button', { name: /new stor/ })).toHaveCount(0)
 })

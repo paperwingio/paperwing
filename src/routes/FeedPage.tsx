@@ -51,13 +51,23 @@ export function FeedPage() {
   const { data: boardView } = useBoard(channel?.board?.did, channel?.board?.rkey)
 
   const listKey = `${channelId}|${variant}|${sort}|${sourceFilter}|${kindFilter}`
-  // One paint once most sources are in, then an order that holds while later ones land (steadyFeed.ts).
+  // What the reader can see: the steady list (below) holds these, so its "new stories" count means it.
+  const shownStories = useMemo(
+    () => feed.stories.filter((s) => (!sourceFilter || s.source === sourceFilter) && (!kindFilter || kindOf(s) === kindFilter) && (!hideRead || !read[s.key] || s.key === itemKey)),
+    // `read` changes on every open; only re-filter for it when hiding read items.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [feed.stories, sourceFilter, kindFilter, hideRead, hideRead ? read : null, itemKey],
+  )
+  // One paint once the sources are in, then an order that holds while later ones land (steadyFeed.ts).
   // Spicy reorders as grades come in, which is its point.
-  const steady = useSteadyList(feed, listKey, sort === 'spicy')
+  const steady = useSteadyList({ ...feed, stories: shownStories }, { paintKey: `${channelId}|${variant}`, listKey }, sort === 'spicy')
+  const visible = steady.stories
   const toTop = () => {
     document.getElementById('list-scroll')?.scrollTo({ top: 0 })
     window.scrollTo({ top: 0 })
   }
+  // Asking for fresh stories brings the new order in; it starts at the top, so nothing reorders under you mid-list.
+  const refresh = () => steady.refresh().then((r) => (toTop(), r))
 
   // A new list starts at the top. Beside the reading pane the list scrolls itself; on a phone the
   // page does, and the list column never moves. (Back still lands where you were: the browser
@@ -71,13 +81,7 @@ export function FeedPage() {
     document.title = channel ? `${channel.label} – PaperWing` : 'PaperWing'
   }, [channel])
 
-  const visible = useMemo(
-    () => steady.stories.filter((s) => (!sourceFilter || s.source === sourceFilter) && (!kindFilter || kindOf(s) === kindFilter) && (!hideRead || !read[s.key] || s.key === itemKey)),
-    // `read` changes on every open; only re-filter for it when hiding read items.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [steady.stories, sourceFilter, kindFilter, hideRead, hideRead ? read : null, itemKey],
-  )
-  const { cursor, open } = useListKeys(visible, itemKey, base, steady.refresh)
+  const { cursor, open } = useListKeys(visible, itemKey, base, refresh)
   // In Hot, where the stories turn to ones you saw on earlier visits.
   const caughtUp = tasteOrders ? caughtUpAt(visible) : undefined
 
@@ -153,9 +157,9 @@ export function FeedPage() {
               kindFilter={kindFilter}
               onKindFilter={(k) => setParam('kind', k)}
               fetching={feed.fetching}
-              onRefresh={steady.refresh}
+              onRefresh={refresh}
             />
-            <PullToRefresh key={listKey} onRefresh={steady.refresh} enabled={!itemKey} motion={pretext} />
+            <PullToRefresh key={listKey} onRefresh={refresh} enabled={!itemKey} motion={pretext} />
             {OUTAGE_CHANNELS.has(channel.id) && <OutageBanner />}
             <NewStories
               count={steady.added}
@@ -174,7 +178,7 @@ export function FeedPage() {
                 </Fragment>
               ))}
             </div>
-            {allFailed && <FeedFailed offline={!navigator.onLine} statuses={feed.statuses} onRetry={() => void steady.refresh()} />}
+            {allFailed && <FeedFailed offline={!navigator.onLine} statuses={feed.statuses} onRetry={() => void refresh()} />}
             {channel.empty && !channel.feeds.length && (
               <div className="px-6 py-16 text-center">
                 <p className="text-[1.125rem] font-bold">{channel.empty.title}</p>
@@ -199,7 +203,7 @@ export function FeedPage() {
                     return p
                   })
                 }
-                onRefresh={() => void steady.refresh()}
+                onRefresh={() => void refresh()}
               />
             )}
             {visible.length > limit && (
