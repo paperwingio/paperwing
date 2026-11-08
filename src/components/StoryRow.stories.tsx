@@ -53,6 +53,21 @@ export const BlogWithExcerpt: Story = {
       topics: ['science'],
     }),
   },
+  // No score from an RSS article: the vote arrows stand alone, with no word between them.
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'More like this' })).toBeVisible()
+    await expect(canvas.queryByText('Vote')).toBeNull()
+    await expect(canvas.getByText('Science')).toBeVisible()
+  },
+}
+
+/** In the Science topic itself, every row would be tagged Science: none is. */
+export const InItsOwnTopic: Story = {
+  args: { ...BlogWithExcerpt.args, hideTopic: 'science' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { name: 'A New Proof Smooths Out the Math of Melting' })).toBeVisible()
+    await expect(canvas.queryByText('Science')).toBeNull()
+  },
 }
 
 export const SharedWithANote: Story = {

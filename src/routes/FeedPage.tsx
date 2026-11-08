@@ -174,7 +174,7 @@ export function FeedPage() {
               {visible.slice(0, rendered).map((s, i) => (
                 <Fragment key={s.key}>
                   {i === caughtUp && <CaughtUp />}
-                  <StoryRow story={s} selected={s.key === (itemKey ?? cursor)} read={!!read[s.key] && s.key !== itemKey} onOpen={open} now={now} why={tasteOrders} />
+                  <StoryRow story={s} selected={s.key === (itemKey ?? cursor)} read={!!read[s.key] && s.key !== itemKey} onOpen={open} now={now} why={tasteOrders} hideTopic={channel.topic?.id} />
                 </Fragment>
               ))}
             </div>

@@ -46,9 +46,11 @@ interface Props {
   why?: boolean
   /** The title's heading level: 2 under the page's title, 3 inside a section that has its own. */
   level?: 2 | 3
+  /** The topic the list is already about: every row would say it, so none does. */
+  hideTopic?: string
 }
 
-export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpen, now, note, swipe, why, level = 2 }: Props) {
+export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpen, now, note, swipe, why, level = 2, hideTopic }: Props) {
   const showExcerpts = usePrefs((p) => p.showExcerpts)
   const thumbnails = usePrefs((p) => p.thumbnails)
   // Behind a warning: the note shows, and in blur mode the picture (and, unless only pictures were flagged, the excerpt) is covered.
@@ -57,6 +59,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const saved = useLibrary((l) => !!l.items[s.key])
   const pending = useLibrary((l) => !!l.pending[s.key])
   const domain = domainOf(s.url)
+  const topics = s.topics.filter((t) => t !== hideTopic).slice(0, 2)
   const plain = showExcerpts && s.text && EXCERPT_SOURCES.has(s.source) ? plainText(s.text) : undefined
   // A text-only post's title is its own first line; repeating it as an excerpt adds nothing.
   const excerpt = plain && !plain.startsWith(s.title.replace(/…$/, '').slice(0, 40)) ? plain : undefined
@@ -183,7 +186,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
               </p>
             )}
             {note}
-            {(s.topics.length > 0 || also.length > 0 || covered.length > 0 || s.recommended || (s.board && !s.board.official)) && (
+            {(topics.length > 0 || also.length > 0 || covered.length > 0 || s.recommended || (s.board && !s.board.official)) && (
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 {/* A board's post: what it's for, and joining its board, down here where there's room on a phone. */}
                 {s.recommended && (
@@ -192,7 +195,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
                   </span>
                 )}
                 {s.board && !s.board.official && <JoinBoard board={s.board} />}
-                {s.topics.slice(0, 2).map((t) => (
+                {topics.map((t) => (
                   <TopicTag key={t} id={t} />
                 ))}
                 {also.length > 0 && (
@@ -273,7 +276,8 @@ export function Votes({ story: s, vote }: { story: Ranked | Story; vote?: 1 | -1
       <button onClick={() => press(1)} aria-label={platform?.label ?? 'More like this'} aria-pressed={upOn} title={platform ? `${platform.label}, and more like this (u)` : 'More like this (u)'}>
         <ArrowBigUp size={18} fill={upOn ? 'currentColor' : 'none'} />
       </button>
-      <span className="num">{s.score ? compact(s.score) : 'Vote'}</span>
+      {/* No score to show (a news article): the arrows say what they are, and need no word between them. */}
+      {!!s.score && <span className="num">{compact(s.score)}</span>}
       <button onClick={() => press(-1)} aria-label="Less like this" aria-pressed={vote === -1} title="Less like this (d)">
         <ArrowBigDown size={18} fill={vote === -1 ? 'currentColor' : 'none'} />
       </button>
