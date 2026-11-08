@@ -80,6 +80,8 @@ export const BehindAWarning: Story = {
 }
 
 export const Selected: Story = { args: { selected: true } }
+/** A hot discussion on the selected row: its red count sits on grey, and the accessibility check holds it to 4.5:1. */
+export const SelectedAndHot: Story = { args: { selected: true, story: ranked({ comments: 219, heat: 0.9 }) } }
 export const Read: Story = { args: { read: true } }
 
 export const OpensOnTap: Story = {

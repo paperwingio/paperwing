@@ -78,8 +78,9 @@
   --pip-blush: #f3c8b9;
   --pip-shine: #ffffff;
   /* Your votes: up in the signal colour, down in a cool blue. */
-  /* A shade darker than --signal: an upvoted count sits on the grey vote pill and must clear 4.5:1 there. */
-  --up: oklch(0.53 0.215 27);
+  /* Darker than --signal: an upvoted (or hot) count sits on grey (the vote pill, a selected row) and
+     must clear 4.5:1 there. 0.53 fell just short on a selected row. */
+  --up: oklch(0.51 0.21 27);
   --down: oklch(0.52 0.17 262);
   /* Topic identity: a hue per topic, set as --h on the element. */
   --field-l: 0.885;
@@ -147,6 +148,8 @@
   --kind-follow: oklch(0.72 0.1 195);
   --kind-ink: oklch(0.17 0.01 95);
   --signal-soft: oklch(0.31 0.075 30);
+  /* The light theme's darker red is for grey on light: on dark, an upvoted count takes the dark signal. */
+  --up: oklch(0.7 0.18 30);
   --down: oklch(0.72 0.13 262);
   --field-l: 0.31;
   --field-c: 0.065;
@@ -294,6 +297,18 @@
   .chip.on {
     color: var(--ground);
     background: var(--ink);
+  }
+  /* A count beside a chip's or a segment's label ("Shared 269"): lighter than the label, still 4.5:1
+     on the chip. Fading it with opacity fell to about 4:1 on the grey chip; on a selected (inked)
+     chip it takes the chip's own colour, softened. */
+  .count {
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .chip[aria-pressed='true'] .count,
+  .chip.on .count {
+    color: inherit;
+    opacity: 0.8;
   }
 
   .btn {
@@ -1429,6 +1444,10 @@
   }
   .row.read .pill.hot {
     color: var(--ink-2);
+  }
+  /* On the selected row's grey, the signal red falls short of 4.5:1: the shade the vote count uses there. */
+  .row.selected .pill.hot {
+    color: var(--up);
   }
   /* A quoted post inside a post or comment. */
   .quote-card {

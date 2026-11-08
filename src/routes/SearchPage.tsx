@@ -274,7 +274,7 @@ export function SearchPage() {
                     onClick={() => setOnly(only === c.id ? undefined : c.id)}
                     title={c.failed ? `${c.label} search failed` : undefined}
                   >
-                    {c.label} <span className="num ml-1 opacity-70">{c.pending && !c.count ? '…' : c.failed ? '!' : c.count}</span>
+                    {c.label} <span className="num count ml-1">{c.pending && !c.count ? '…' : c.failed ? '!' : c.count}</span>
                   </button>
                 ))}
             </div>
