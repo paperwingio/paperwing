@@ -390,6 +390,8 @@ export function RowSkeleton() {
         <div className="skel h-4 w-[88%]" />
         <div className="skel h-4 w-[56%]" />
       </div>
+      {/* A topic tag's line, as most rows have: the swap to real rows then barely moves anything. */}
+      <div className="skel mt-3 h-6 w-20 rounded-full" />
       <div className="mt-3 flex gap-2">
         <div className="skel h-8 w-24 rounded-full" />
         <div className="skel h-8 w-16 rounded-full" />

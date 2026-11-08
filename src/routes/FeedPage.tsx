@@ -11,6 +11,8 @@ import { TypesetLoader } from '../components/pretext/TypesetLoader'
 import { BoardContext, useBoard } from '../lib/boards'
 import { PullToRefresh } from '../components/PullToRefresh'
 import { useChannelFeed, useNow } from '../lib/hooks'
+import { useSteadyList } from '../lib/steadyFeed'
+import { NewStories } from '../components/NewStories'
 import { usePretext, useTypesetIn } from '../lib/pretext'
 import { caughtUpAt, kindOf, type SortMode } from '../lib/rank'
 import { CaughtUp } from '../components/CaughtUp'
@@ -48,33 +50,44 @@ export function FeedPage() {
   // On a board, the reading pane offers its moderators their actions.
   const { data: boardView } = useBoard(channel?.board?.did, channel?.board?.rkey)
 
+  const listKey = `${channelId}|${variant}|${sort}|${sourceFilter}|${kindFilter}`
+  // What the reader can see: the steady list (below) holds these, so its "new stories" count means it.
+  const shownStories = useMemo(
+    () => feed.stories.filter((s) => (!sourceFilter || s.source === sourceFilter) && (!kindFilter || kindOf(s) === kindFilter) && (!hideRead || !read[s.key] || s.key === itemKey)),
+    // `read` changes on every open; only re-filter for it when hiding read items.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [feed.stories, sourceFilter, kindFilter, hideRead, hideRead ? read : null, itemKey],
+  )
+  // One paint once the sources are in, then an order that holds while later ones land (steadyFeed.ts).
+  // Spicy reorders as grades come in, which is its point.
+  const steady = useSteadyList({ ...feed, stories: shownStories }, { paintKey: `${channelId}|${variant}`, listKey }, sort === 'spicy')
+  const visible = steady.stories
+  const toTop = () => {
+    document.getElementById('list-scroll')?.scrollTo({ top: 0 })
+    window.scrollTo({ top: 0 })
+  }
+  // Asking for fresh stories brings the new order in; it starts at the top, so nothing reorders under you mid-list.
+  const refresh = () => steady.refresh().then((r) => (toTop(), r))
+
   // A new list starts at the top. Beside the reading pane the list scrolls itself; on a phone the
   // page does, and the list column never moves. (Back still lands where you were: the browser
   // restores the page after this runs.)
   useEffect(() => {
     setLimit(PAGE)
-    document.getElementById('list-scroll')?.scrollTo({ top: 0 })
-    window.scrollTo({ top: 0 })
+    toTop()
   }, [channelId, variant, sort, sourceFilter, kindFilter])
 
   useEffect(() => {
     document.title = channel ? `${channel.label} – PaperWing` : 'PaperWing'
   }, [channel])
 
-  const visible = useMemo(
-    () => feed.stories.filter((s) => (!sourceFilter || s.source === sourceFilter) && (!kindFilter || kindOf(s) === kindFilter) && (!hideRead || !read[s.key] || s.key === itemKey)),
-    // `read` changes on every open; only re-filter for it when hiding read items.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [feed.stories, sourceFilter, kindFilter, hideRead, hideRead ? read : null, itemKey],
-  )
-  const { cursor, open } = useListKeys(visible, itemKey, base, feed.refetch)
+  const { cursor, open } = useListKeys(visible, itemKey, base, refresh)
   // In Hot, where the stories turn to ones you saw on earlier visits.
   const caughtUp = tasteOrders ? caughtUpAt(visible) : undefined
 
   // A new list (another channel, sort or filter) paints its first screen of rows at once and the
   // rest just after, in an interruptible render, so a tap on Hot, Latest or Top answers straight
   // away instead of waiting on fifty rows nobody can see yet.
-  const listKey = `${channelId}|${variant}|${sort}|${sourceFilter}|${kindFilter}`
   const [eager, setEager] = useState({ key: listKey, rows: FIRST })
   if (eager.key !== listKey) setEager({ key: listKey, rows: FIRST })
   const rendered = Math.min(limit, eager.key === listKey ? eager.rows : FIRST)
@@ -144,13 +157,20 @@ export function FeedPage() {
               kindFilter={kindFilter}
               onKindFilter={(k) => setParam('kind', k)}
               fetching={feed.fetching}
-              onRefresh={feed.refetch}
+              onRefresh={refresh}
             />
-            <PullToRefresh key={listKey} onRefresh={feed.refetch} enabled={!itemKey} motion={pretext} />
+            <PullToRefresh key={listKey} onRefresh={refresh} enabled={!itemKey} motion={pretext} />
             {OUTAGE_CHANNELS.has(channel.id) && <OutageBanner />}
-            <div role={visible.length ? 'feed' : undefined} aria-busy={feed.loading}>
-              {feed.loading && !visible.length && pretext && <TypesetLoader label={channel.label} />}
-              {feed.loading && !visible.length && Array.from({ length: pretext ? 4 : 8 }, (_, i) => <RowSkeleton key={i} />)}
+            <NewStories
+              count={steady.added}
+              onShow={() => {
+                steady.showNew()
+                toTop()
+              }}
+            />
+            <div role={visible.length ? 'feed' : undefined} aria-busy={steady.loading}>
+              {steady.loading && !visible.length && pretext && <TypesetLoader label={channel.label} />}
+              {steady.loading && !visible.length && Array.from({ length: pretext ? 4 : 8 }, (_, i) => <RowSkeleton key={i} />)}
               {visible.slice(0, rendered).map((s, i) => (
                 <Fragment key={s.key}>
                   {i === caughtUp && <CaughtUp />}
@@ -158,7 +178,7 @@ export function FeedPage() {
                 </Fragment>
               ))}
             </div>
-            {allFailed && <FeedFailed offline={!navigator.onLine} statuses={feed.statuses} onRetry={() => void feed.refetch()} />}
+            {allFailed && <FeedFailed offline={!navigator.onLine} statuses={feed.statuses} onRetry={() => void refresh()} />}
             {channel.empty && !channel.feeds.length && (
               <div className="px-6 py-16 text-center">
                 <p className="text-[1.125rem] font-bold">{channel.empty.title}</p>
@@ -170,7 +190,7 @@ export function FeedPage() {
                 )}
               </div>
             )}
-            {!feed.loading && !allFailed && !channel.empty && !visible.length && (
+            {!steady.loading && !allFailed && !channel.empty && !visible.length && (
               <FeedEmpty
                 quiet={channel.quiet}
                 filtered={!!(sourceFilter || kindFilter)}
@@ -183,7 +203,7 @@ export function FeedPage() {
                     return p
                   })
                 }
-                onRefresh={() => void feed.refetch()}
+                onRefresh={() => void refresh()}
               />
             )}
             {visible.length > limit && (
