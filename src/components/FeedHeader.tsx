@@ -129,14 +129,14 @@ export function FeedHeader({ channel, stories, statuses, sort, onSort, variant, 
       ) : channel.person ? (
         <ProfileHeader actor={channel.person} />
       ) : (
-        <header className="px-3 pt-3 md:px-4 md:pt-4">
-          <div className={`field relative isolate overflow-hidden px-4 pb-3.5 pt-4 md:px-5 ${fieldClass}${glide ? ' field-glide' : ''}`} style={fieldStyle}>
+        <header className="px-3 pt-2 md:px-4 md:pt-4">
+          <div className={`field relative isolate overflow-hidden px-4 pb-3 pt-3 md:px-5 md:pb-3.5 md:pt-4 ${fieldClass}${glide ? ' field-glide' : ''}`} style={fieldStyle}>
             {glyphs.map((G, i) => (
               <G key={i} className={`field-glyph g${i}`} aria-hidden strokeWidth={1.5} />
             ))}
             <div className="flex flex-wrap items-center gap-2">
               <div className="min-w-0 flex-1 basis-full sm:basis-0">
-                <h1 className="feed-title text-[1.5rem] font-bold leading-[1.15] tracking-[-0.02em] [overflow-wrap:break-word]">{channel.label}</h1>
+                <h1 className="feed-title text-[1.375rem] font-bold md:text-[1.5rem] leading-[1.15] tracking-[-0.02em] [overflow-wrap:break-word]">{channel.label}</h1>
                 {forYou && blend.length > 0 ? (
                   // What it's ranking, on phones too: the topics' marks and names.
                   <p className="mt-1.5 flex min-w-0 items-center gap-2 text-[0.875rem]">

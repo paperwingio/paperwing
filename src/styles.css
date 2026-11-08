@@ -382,16 +382,22 @@
   }
 
   /* The phone's one action: post a link. Filled, so it reads as "make something" among the icons. */
+  /* Posting sits with the bar's other actions, as quiet as they are: the stories are the point. */
   .post-btn {
     display: inline-grid;
     place-items: center;
     width: 2.25rem;
     height: 2.25rem;
-    margin-right: 0.25rem;
     border-radius: 999px;
-    background: var(--ink);
-    color: var(--ground);
-    transition: transform var(--dur-micro);
+    color: var(--ink-2);
+    transition:
+      transform var(--dur-micro),
+      background-color var(--dur-micro),
+      color var(--dur-micro);
+  }
+  .post-btn:hover {
+    background: var(--active);
+    color: var(--ink);
   }
   .post-btn:active {
     transform: scale(0.94);
@@ -1380,6 +1386,13 @@
     align-items: center;
     gap: 0.5rem;
     margin-top: 0.625rem;
+    /* Lines the first arrow and the last icon up with the row's text, now the pills have no outline. */
+    margin-inline: -0.5rem -0.625rem;
+  }
+  /* A row's actions repeat down the whole feed: no outline of their own, so the stories lead. A
+     hover fills them, focus keeps its ring, and a saved story's fill still says so. */
+  .row-bar .pill {
+    box-shadow: none;
   }
   .pill {
     display: inline-flex;

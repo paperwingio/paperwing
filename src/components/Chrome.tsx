@@ -340,7 +340,7 @@ export function MobileBar() {
         <OfflineBadge />
         {/* Posting is a tap away on every screen: phones have no command bar to type a link into. */}
         <button className="post-btn" onClick={() => postLink()} aria-label="Post a link" title="Post a link">
-          <Plus size={20} strokeWidth={2.4} />
+          <Plus size={20} />
         </button>
         <NavLink to="/activity" className="icon-btn relative" aria-label={unread ? `Activity, ${unread} new` : 'Activity'}>
           <Bell size={18} />
