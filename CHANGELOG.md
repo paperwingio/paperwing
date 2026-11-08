@@ -1,5 +1,18 @@
 # What's new
 
+## 0.21.0
+
+_Released 8 November 2026_
+
+### Improved
+
+- **A calmer feed.** A story's vote, comment, save and share buttons no longer carry outlines, so the headlines lead and the buttons fill in when you point at them. Rows inside a topic no longer repeat that topic's tag, stories without a score lose the "Vote" label between the arrows, the post button sits quietly beside the others, and the topic header takes less room on phones.
+- **The feed holds still.** Stories used to reshuffle several times in the first seconds as each source answered. Now the feed waits a moment for its sources and shows them in one go. Stories that arrive after that wait behind a "new stories" button at the top instead of pushing in, and refreshing brings them straight in.
+
+### Fixes
+
+- **Easier-to-read counts.** The numbers beside the feed's filter buttons and on the search page were faded too far to read comfortably, and in dark mode an upvoted count was dark red on dark grey. Both now meet the contrast that accessibility guidelines ask for, as does a busy discussion's red count on the story you have open.
+
 ## 0.20.2
 
 _Released 7 November 2026_
