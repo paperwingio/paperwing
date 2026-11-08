@@ -1971,6 +1971,38 @@
     opacity: 0;
     margin-left: auto;
   }
+  /* Stories that arrived after the list painted (NewStories): floating over the list's top, taking
+     no room, so showing it moves no row. */
+  .new-stories {
+    position: sticky;
+    /* Just under the sticky sort row (FeedHeader's .sticky-head). */
+    top: 3.5rem;
+    z-index: 6;
+    display: flex;
+    justify-content: center;
+    height: 0;
+    overflow: visible;
+  }
+  .new-stories-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2.25rem;
+    margin-top: 0.5rem;
+    padding: 0 1rem 0 0.875rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--ground);
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: 0 6px 20px -6px rgb(0 0 0 / 0.35);
+    animation: rise var(--dur-short) var(--ease);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .new-stories-btn {
+      animation: none;
+    }
+  }
   @keyframes fade {
     from {
       opacity: 0;
@@ -2437,6 +2469,14 @@
       transition: transform var(--dur-short) var(--ease);
     }
     [data-appbar='hidden'] .sticky-head {
+      transform: translateY(calc(env(safe-area-inset-top) - var(--appbar-h, 0px)));
+    }
+    /* The new-stories pill follows the sort row: under it, and up with the app bar. */
+    .new-stories {
+      top: calc(var(--appbar-h, env(safe-area-inset-top)) + 3.5rem);
+      transition: transform var(--dur-short) var(--ease);
+    }
+    [data-appbar='hidden'] .new-stories {
       transform: translateY(calc(env(safe-area-inset-top) - var(--appbar-h, 0px)));
     }
     .pane-col {
