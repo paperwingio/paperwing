@@ -279,7 +279,7 @@ export function FeedHeader({ channel, stories, statuses, sort, onSort, variant, 
                         : 'Only posts that are the conversation itself: Ask HN, Bluesky text posts'
                   }
                 >
-                  {k === 'shared' ? 'Shared' : 'Discussions'} <span className="num font-normal opacity-75">{kinds[k]}</span>
+                  {k === 'shared' ? 'Shared' : 'Discussions'} <span className="num count">{kinds[k]}</span>
                 </button>
               ))}
             {splitKinds && sources.length > 1 && <span className="mx-1 h-5 w-px flex-none bg-line" aria-hidden />}
@@ -293,7 +293,7 @@ export function FeedHeader({ channel, stories, statuses, sort, onSort, variant, 
                   title={sourceFilter === src ? 'Show every source' : `Only ${SOURCE_NAMES[src]}`}
                 >
                   <SourceIcon source={src} size={14} mono={sourceFilter === src} />
-                  {SOURCE_NAMES[src]} <span className="num font-normal opacity-75">{n}</span>
+                  {SOURCE_NAMES[src]} <span className="num count">{n}</span>
                 </button>
               ))}
           </div>
@@ -343,7 +343,7 @@ export function FeedHeader({ channel, stories, statuses, sort, onSort, variant, 
               {([undefined, 'shared', 'discussions'] as const).map((k) => (
                 <button key={k ?? 'all'} className="flex-1" aria-pressed={kindFilter === k} onClick={() => onKindFilter(k)}>
                   {k === 'shared' ? 'Shared' : k === 'discussions' ? 'Discussions' : 'Everything'}
-                  {k && <span className="num ml-1 font-normal opacity-75">{kinds[k]}</span>}
+                  {k && <span className="num count ml-1">{kinds[k]}</span>}
                 </button>
               ))}
             </div>
