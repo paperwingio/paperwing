@@ -4,7 +4,7 @@ import { Pip } from '../components/Pip'
 // What PaperWing keeps, where, and who sees it. Written to match the code: if something here
 // changes in the app (a new server store, a new service), this page changes with it.
 
-const UPDATED = '4 November 2026'
+const UPDATED = '11 November 2026'
 
 function Part({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -112,8 +112,8 @@ export function PrivacyPage() {
 
         <Part title="What the server sees in passing">
           <p>
-            Downloading a picture asks its image host directly from your browser, without sign-in cookies, and saves a file on your device. The host sees that request; PaperWing’s server does not
-            receive the picture or keep a download history. Files you download remain on your device when you clear PaperWing’s data.
+            Pictures in lists load from their image hosts as you scroll. Downloading a picture asks its image host directly from your browser, without sign-in cookies, and saves a file on your device.
+            The host sees those requests; PaperWing’s server does not receive the picture or keep a download history. Files you download remain on your device when you clear PaperWing’s data.
           </p>
           <p>
             To get around browser restrictions, the server fetches some things for you: feeds, articles for the reader view, link previews and site icons. It sees the address it fetches, and caches

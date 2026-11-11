@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect, fn, userEvent } from 'storybook/test'
+import { expect, fn, userEvent, waitFor } from 'storybook/test'
 import { useActivity, usePrefs } from '../lib/store'
 import { NOW, ranked, story } from '../test/fixtures'
 import { RowSkeleton, StoryRow } from './StoryRow'
@@ -225,5 +225,106 @@ export const WarnNotice: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.click(canvas.getByRole('link', { name: /Microsoft gives notice/ }))
     await expect(args.onOpen).toHaveBeenCalledWith('wn-wa-1grz4f9', 'article')
+  },
+}
+
+const joke = ranked({
+  key: 'bs-joke',
+  source: 'bluesky',
+  sourceLabel: 'Bluesky',
+  title: 'I finally fixed the bug…',
+  url: null,
+  discussionUrl: 'https://bsky.app/profile/paperwing.io',
+  text: '<p>I finally fixed the bug after three hours of carefully reading the documentation.</p><p>It was in the other terminal.</p>',
+  topics: ['humour'],
+})
+
+export const FullJoke: Story = {
+  args: { story: joke },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { name: /It was in the other terminal/ })).toBeVisible()
+    await expect(canvas.queryByText('I finally fixed the bug…', { exact: true })).toBeNull()
+  },
+}
+
+export const JokeWithATitle: Story = {
+  args: { story: { ...joke, source: 'lemmy', sourceLabel: 'c/programmer_humor', title: 'Why debugging takes three hours', text: '<p>It was in the other terminal.</p>' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { name: 'Why debugging takes three hours' })).toBeVisible()
+    await expect(canvas.getByText('It was in the other terminal.', { exact: true })).toBeVisible()
+  },
+}
+
+const meme =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750"><rect width="600" height="750" fill="#e8e8e8"/><text x="40" y="90" font-family="sans-serif" font-size="32" fill="#222">The tests passed locally.</text><rect x="40" y="140" width="520" height="430" rx="16" fill="#bed5c8"/><text x="40" y="680" font-family="sans-serif" font-size="30" fill="#222">The server was not running.</text></svg>',
+  )
+
+export const Meme: Story = {
+  args: {
+    story: {
+      ...joke,
+      source: 'lemmy',
+      sourceLabel: 'c/memes',
+      title: 'A perfectly normal deployment',
+      text: undefined,
+      media: [{ kind: 'image', thumb: meme, full: `${meme}#original`, aspect: 0.8, alt: 'The tests passed locally. The server was not running.' }],
+    },
+  },
+  play: async ({ canvas, args }) => {
+    const image = canvas.getByRole('img', { name: /The tests passed locally/ })
+    await expect(image).toBeVisible()
+    await expect(image).toHaveAttribute('src', meme)
+    await expect(getComputedStyle(image).objectFit).toBe('contain')
+    await waitFor(() => expect(image.getBoundingClientRect().width).toBeGreaterThan(200))
+    await userEvent.click(canvas.getByRole('link', { name: /Open image/ }))
+    await expect(args.onOpen).not.toHaveBeenCalled()
+    await userEvent.keyboard('{Escape}')
+  },
+}
+
+export const JokeWithQuote: Story = {
+  args: {
+    story: {
+      ...joke,
+      quote: {
+        author: 'paperwing.io',
+        html: '<p>We have replaced every meeting with a meeting to discuss which meetings to replace. Attendance is mandatory, including for the meeting about optional meetings.</p>',
+        media: [{ kind: 'image', thumb: meme, alt: 'The meeting agenda' }],
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    const quote = canvas.getByText(/Attendance is mandatory/)
+    await expect(quote).toBeVisible()
+    await expect(getComputedStyle(quote).webkitLineClamp).toBe('none')
+    await expect(canvas.getByRole('img', { name: 'The meeting agenda' })).toBeVisible()
+  },
+}
+
+export const HumourWithoutPictures: Story = {
+  args: Meme.args,
+  parameters: { app: { prefs: { thumbnails: false } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('img', { name: /The tests passed locally/ })).toBeNull()
+  },
+}
+
+export const TwoMemes: Story = {
+  args: { story: { ...joke, text: undefined, media: [...Meme.args!.story!.media!, { kind: 'image', thumb: meme, alt: 'The punchline', aspect: 0.8 }] } },
+  play: async ({ canvas }) => {
+    for (const image of canvas.getAllByRole('img')) await expect(getComputedStyle(image).objectFit).toBe('contain')
+    await expect(canvas.getByRole('img', { name: 'The punchline' })).toBeVisible()
+  },
+}
+
+export const HumourBehindAWarning: Story = {
+  args: { story: { ...joke, warning: 'Sensitive content', quote: JokeWithQuote.args!.story!.quote, media: Meme.args!.story!.media } },
+  parameters: { app: { prefs: { warnings: 'blur' } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(/Attendance is mandatory/)).toBeNull()
+    await expect(canvas.queryByRole('img', { name: /The tests passed locally|The meeting agenda/ })).toBeNull()
+    await expect(canvas.queryByRole('heading', { name: /It was in the other terminal/ })).toBeNull()
   },
 }

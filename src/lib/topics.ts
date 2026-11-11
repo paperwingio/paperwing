@@ -158,15 +158,17 @@ for (const t of TOPICS) {
     const labels =
       f.kind === 'rss'
         ? [f.label.toLowerCase()]
-        : f.kind === 'devto'
-          ? [`dev.to #${f.tag}`]
-          : f.kind === 'lobsters' && f.path.startsWith('t/')
-            ? []
-            : f.kind === 'hf'
-              ? ['hf papers']
-              : f.kind === 'arxiv' && t.id === 'ml-research'
-                ? ['arxiv']
-                : []
+        : f.kind === 'bskyFeed'
+          ? [f.name.toLowerCase()]
+          : f.kind === 'devto'
+            ? [`dev.to #${f.tag}`]
+            : f.kind === 'lobsters' && f.path.startsWith('t/')
+              ? []
+              : f.kind === 'hf'
+                ? ['hf papers']
+                : f.kind === 'arxiv' && t.id === 'ml-research'
+                  ? ['arxiv']
+                  : []
     for (const l of labels) DEDICATED.set(l, [...(DEDICATED.get(l) ?? []), t.id])
   }
   // A dedicated Lemmy community's posts belong to the topic whatever they say (c/localllama is LLMs).
