@@ -31,6 +31,8 @@ export async function fetchThread(key: string): Promise<Thread | null> {
     }
     case 'md':
       return mastodonThread(key)
+    case 'pt':
+      return (await import('./peertube')).peertubeThread(key)
     case 'st':
       return (await api('thread', { src: 'status', id: key })) as Thread
     case 'wn':

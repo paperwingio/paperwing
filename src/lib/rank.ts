@@ -79,6 +79,8 @@ const REFERENCE: Record<SourceKind, [score: number, comments: number]> = {
   bluesky: [150, 15],
   lemmy: [80, 25],
   mastodon: [40, 8],
+  // PeerTube is small: half a dozen likes is a well-liked video.
+  peertube: [8, 3],
   // Frontpage is small: a dozen votes is a good day there.
   frontpage: [12, 3],
   status: [0, 0],

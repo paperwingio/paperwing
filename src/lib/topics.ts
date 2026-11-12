@@ -26,6 +26,8 @@ export type FeedRef =
   | { kind: 'paperwing'; sort: 'hot' | 'new' | 'top'; board?: string }
   /** Headlines from anywhere matching a search (news search RSS): what makes a free-text interest work for any subject. */
   | { kind: 'news'; q: string }
+  /** PeerTube videos: one category's trending across servers (Sepia Search), or one server's own trending. */
+  | { kind: 'peertube'; category?: number; host?: string }
   /** Mastodon through the reader's server: its tech trends, hashtags, or their home timeline. */
   | { kind: 'mastodon'; feed: 'trends' | 'home' | 'tags'; tags?: string[]; topic?: string; topics?: string[] }
   /** What someone has listed on PaperWing, newest first (api/_lib/people.ts). `actor` is a handle or DID. */
@@ -164,6 +166,11 @@ function patternsFor(topic: Pick<Topic, 'id' | 'terms'>): RegExp[] {
   return list
 }
 
+/** PeerTube's video categories (the same ids on every server) that topics read. */
+const PEERTUBE_CATEGORIES: Record<number, string> = { 7: 'Gaming', 9: 'Comedy', 16: 'Animals', 18: 'Food' }
+/** A PeerTube feed's name, which its videos carry as their label. */
+export const peertubeLabel = (r: { category?: number; host?: string }) => (r.category ? `PeerTube ${PEERTUBE_CATEGORIES[r.category] ?? 'videos'}` : (r.host ?? 'PeerTube'))
+
 /** Topics a source is dedicated to: anything from r/sre is SRE even if the title doesn't say so. */
 const DEDICATED = new Map<string, string[]>()
 for (const t of TOPICS) {
@@ -173,15 +180,17 @@ for (const t of TOPICS) {
         ? [f.label.toLowerCase()]
         : f.kind === 'bskyFeed'
           ? [f.name.toLowerCase()]
-          : f.kind === 'devto'
-            ? [`dev.to #${f.tag}`]
-            : f.kind === 'lobsters' && f.path.startsWith('t/')
-              ? []
-              : f.kind === 'hf'
-                ? ['hf papers']
-                : f.kind === 'arxiv' && t.id === 'ml-research'
-                  ? ['arxiv']
-                  : []
+          : f.kind === 'peertube'
+            ? [peertubeLabel(f).toLowerCase()]
+            : f.kind === 'devto'
+              ? [`dev.to #${f.tag}`]
+              : f.kind === 'lobsters' && f.path.startsWith('t/')
+                ? []
+                : f.kind === 'hf'
+                  ? ['hf papers']
+                  : f.kind === 'arxiv' && t.id === 'ml-research'
+                    ? ['arxiv']
+                    : []
     for (const l of labels) DEDICATED.set(l, [...(DEDICATED.get(l) ?? []), t.id])
   }
   // A dedicated Lemmy community's posts belong to the topic whatever they say (c/localllama is LLMs).

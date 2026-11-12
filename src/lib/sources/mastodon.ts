@@ -158,7 +158,7 @@ export function statusStory(instance: string, status: Status): Story {
 }
 
 /** Hashtags cross languages: keep posts in the reader's languages, and English, which tech defaults to. */
-const readable = (lang?: string | null) => !lang || ['en', ...(typeof navigator === 'undefined' ? [] : navigator.languages)].some((l) => l.toLowerCase().split('-')[0] === lang.toLowerCase())
+export const readable = (lang?: string | null) => !lang || ['en', ...(typeof navigator === 'undefined' ? [] : navigator.languages)].some((l) => l.toLowerCase().split('-')[0] === lang.toLowerCase())
 
 /**
  * Original posts: replies aren't stories. Outside your own timeline, only public posts in a

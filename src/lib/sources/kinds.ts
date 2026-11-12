@@ -1,7 +1,7 @@
 import { fetchBoard } from '../boards'
 import { DEFAULT_INSTANCE } from '../mastodon'
 import { fetchPerson } from '../people'
-import type { FeedRef } from '../topics'
+import { peertubeLabel, type FeedRef } from '../topics'
 import type { SourceKind, Story } from '../types'
 import { blueskyCustomFeed, blueskyFeed, blueskyFollowing } from './bluesky'
 import { devtoTag } from './devto'
@@ -166,6 +166,14 @@ export const FEED_KINDS: { [K in FeedRef['kind']]: FeedKind<K> } = {
     brand: () => 'Mastodon',
     mark: () => ({ source: 'mastodon' }),
     fetch: (r) => (r.feed === 'tags' ? mastodonTags(r.tags ?? []) : r.feed === 'home' ? mastodonHome() : mastodonTrends()),
+  },
+  peertube: {
+    id: (r) => `pt:${r.host ?? 'sepia'}:${r.category ?? ''}`,
+    label: (r) => peertubeLabel(r),
+    brand: () => 'PeerTube',
+    mark: () => ({ source: 'peertube' }),
+    // Loaded with the first PeerTube feed: most readers never follow one.
+    fetch: (r) => import('./peertube').then((m) => m.peertubeFeed(r)),
   },
   news: {
     id: (r) => `nw:${r.q}`,

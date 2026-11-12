@@ -1,4 +1,4 @@
-export type SourceKind = 'hn' | 'lobsters' | 'devto' | 'hf' | 'arxiv' | 'github' | 'release' | 'rss' | 'bluesky' | 'lemmy' | 'mastodon' | 'status' | 'frontpage' | 'warn'
+export type SourceKind = 'hn' | 'lobsters' | 'devto' | 'hf' | 'arxiv' | 'github' | 'release' | 'rss' | 'bluesky' | 'lemmy' | 'mastodon' | 'status' | 'frontpage' | 'warn' | 'peertube'
 
 /** An image or video attached to a post (Bluesky). */
 export interface Media {
@@ -33,7 +33,7 @@ export interface Quote {
 }
 
 export interface Story {
-  /** Stable app-wide key: hn-123, lb-xyz, dv-42, bs-<uri>, lm-<programming.dev post id>, md-<server>-<status id>, st-<provider>-<incident id>, wn-<state>-<notice>, or ln-<base64url(url)> for link-only items. */
+  /** Stable app-wide key: hn-123, lb-xyz, dv-42, bs-<uri>, lm-<programming.dev post id>, md-<server>-<status id>, pt-<server>-<video short id>, st-<provider>-<incident id>, wn-<state>-<notice>, or ln-<base64url(url)> for link-only items. */
   key: string
   source: SourceKind
   /** Human label for the origin: "Hacker News", "Lobsters", "Simon Willison". */

@@ -27,7 +27,10 @@ export const GENERAL_TOPICS: Topic[] = [
     aliases: ['humor', 'comedy', 'funny', 'comics', 'programming humour', 'programming humor'],
     terms: [],
     related: ['shitposts', 'eye-bleach', 'programming', 'gaming'],
-    feeds: [{ kind: 'bskyFeed', uri: 'at://did:plc:h34txfcpwsnswikajv7tos6w/app.bsky.feed.generator/aaachysnvmkze', name: 'LMAO (Comedy/Humor)' }],
+    feeds: [
+      { kind: 'bskyFeed', uri: 'at://did:plc:h34txfcpwsnswikajv7tos6w/app.bsky.feed.generator/aaachysnvmkze', name: 'LMAO (Comedy/Humor)' },
+      { kind: 'peertube', category: 9 },
+    ],
     lemmy: [
       { community: 'memes@lemmy.world', via: LW },
       { community: 'comicstrips@lemmy.world', via: LW },
@@ -76,6 +79,7 @@ export const GENERAL_TOPICS: Topic[] = [
       { kind: 'bskyFeed', uri: 'at://did:plc:jfhpnnst6flqway4eaeqzj2a/app.bsky.feed.generator/cats', name: 'Cats!' },
       { kind: 'bskyFeed', uri: 'at://did:plc:plqr56q7y23it22h6txnhavh/app.bsky.feed.generator/aaaae2kpch3jg', name: 'Dogs of Bluesky' },
       { kind: 'bskyFeed', uri: 'at://did:plc:ffkgesg3jsv2j7aagkzrtcvt/app.bsky.feed.generator/aaan2gurxv3kk', name: 'Mammals!' },
+      { kind: 'peertube', category: 16 },
     ],
     lemmy: [
       { community: 'aww@lemmy.world', via: LW },
