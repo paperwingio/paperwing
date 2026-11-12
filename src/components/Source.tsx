@@ -12,6 +12,8 @@ export const SOURCE_NAMES: Record<SourceKind, string> = {
   bluesky: 'Bluesky',
   lemmy: 'Lemmy',
   mastodon: 'Mastodon',
+  peertube: 'PeerTube',
+  pixelfed: 'Pixelfed',
   status: 'Status pages',
   frontpage: 'Frontpage',
   warn: 'WARN notices',
@@ -30,6 +32,8 @@ const UNITS: Partial<Record<SourceKind, [string, string]>> = {
   hf: ['upvote', 'upvotes'],
   bluesky: ['like', 'likes'],
   mastodon: ['reaction', 'reactions'],
+  peertube: ['like', 'likes'],
+  pixelfed: ['like', 'likes'],
   frontpage: ['vote', 'votes'],
 }
 

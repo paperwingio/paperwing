@@ -174,6 +174,8 @@ const HOSTS: Record<string, Handler> = {
   'dev.to': (url) => (url.pathname === '/api/articles' ? [] : undefined),
   // Mastodon: trends and hashtags read through Hachyderm unless signed in elsewhere.
   'hachyderm.io': (url) => (/^\/api\/v1\/(trends\/(links|statuses)|timelines\/tag\/)/.test(url.pathname) ? [] : undefined),
+  // PeerTube videos for topics that have them, searched across servers.
+  'sepiasearch.org': (url) => (url.pathname === '/api/v1/search/videos' ? { total: 0, data: [] } : undefined),
   'webmention.io': () => ({ type: 'feed', children: [] }),
 }
 

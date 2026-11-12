@@ -12,7 +12,7 @@ test.use({ prefs: { followed: ['science'] }, stubs: { bluesky: { [feed]: [{ post
 
 test('find humour, follow it into For you and unfollow it', async ({ page }) => {
   await page.goto('/explore/topics')
-  await page.getByRole('searchbox', { name: 'Find a topic' }).fill('shitposting')
+  await page.getByRole('searchbox', { name: 'Find a topic' }).fill('memes')
   const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Memes & humour' }) })
   await card.getByRole('button', { name: 'Follow Memes & humour' }).click()
   await card.getByRole('link', { name: 'Memes & humour', exact: true }).click()
@@ -21,7 +21,7 @@ test('find humour, follow it into For you and unfollow it', async ({ page }) => 
   await page.goto('/t/for-you')
   await expect(page.getByRole('heading', { name: /It was in the other terminal/ })).toBeVisible()
   await page.goto('/explore/topics')
-  await page.getByRole('searchbox', { name: 'Find a topic' }).fill('shitposting')
+  await page.getByRole('searchbox', { name: 'Find a topic' }).fill('memes')
   await card.getByRole('button', { name: 'Following Memes & humour' }).click()
   await page.goto('/t/for-you')
   await expect(page.getByRole('heading', { name: 'For you', exact: true })).toBeVisible()

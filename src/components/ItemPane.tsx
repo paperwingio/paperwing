@@ -17,6 +17,8 @@ import { useOutlets } from '../lib/coverage'
 import { Covered } from './Covered'
 import type { Story } from '../lib/types'
 import { topicsForStory } from '../lib/topics'
+import { heavyNews } from '../lib/nice'
+import { SomethingNice } from './SomethingNice'
 import { toast } from '../lib/ui'
 import { isWatching, useWatch } from '../lib/watch'
 import { landHeadline } from '../lib/pretext'
@@ -360,7 +362,7 @@ export function ItemPane({ itemKey, onClose, onOpen }: Props) {
                       {story.media && (
                         <div className={story.text ? 'mt-4' : undefined}>
                           <Covered warning={cw ? `Content warning: ${cw}` : undefined}>
-                            <MediaGallery media={story.media} href={story.discussionUrl} />
+                            <MediaGallery media={story.media} href={story.discussionUrl} alts />
                           </Covered>
                         </div>
                       )}
@@ -404,6 +406,8 @@ export function ItemPane({ itemKey, onClose, onOpen }: Props) {
                 </div>
               ))}
             {tab === 'article' && <ArticleView story={story} onDiscussion={discussable ? () => setTab('discussion') : undefined} />}
+            {/* Heavy news earns a break afterwards, if you want one. */}
+            {tab === 'article' && heavyNews(topicsForStory(story)) && <SomethingNice className="mt-8 border-t border-line py-6 text-center" />}
             {tab === 'related' && <RelatedView story={story} onOpen={(k) => onOpen(k)} now={now} alsoOn={alsoOn} coverage={coverage} />}
           </div>
         </div>

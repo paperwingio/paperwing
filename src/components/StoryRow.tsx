@@ -16,7 +16,7 @@ import { stateOf, useLibrary } from '../lib/library'
 import { isWatching, useWatch } from '../lib/watch'
 import { domainKey, type Ranked } from '../lib/rank'
 import { useImpression } from '../lib/impressions'
-import { topicsForStory } from '../lib/topics'
+import { isCasual, isQuestion, topicsForStory } from '../lib/topics'
 import { LESSON, useActivity, usePrefs } from '../lib/store'
 import { castVote, storyVote, useAccounts, useVoted } from '../lib/accounts'
 import { rowOutlets } from '../lib/coverage'
@@ -60,10 +60,11 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const pending = useLibrary((l) => !!l.pending[s.key])
   const domain = domainOf(s.url)
   const topics = s.topics.filter((t) => t !== hideTopic).slice(0, 2)
-  const humour = s.topics.includes('humour')
+  const casual = isCasual(s.topics)
+  const question = isQuestion(s.topics)
   const plain = showExcerpts && s.text && EXCERPT_SOURCES.has(s.source) ? plainText(s.text) : undefined
   const words =
-    humour && !s.url && showExcerpts && s.text && !(cover && !s.warnMediaOnly)
+    casual && !s.url && showExcerpts && s.text && !(cover && !s.warnMediaOnly)
       ? s.text
           .split(/<br\s*\/?>|<\/p>/gi)
           .map(plainText)
@@ -79,7 +80,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const vote = useActivity((a) => a.votes[s.key])
   const swipeRef = useSwipeActions<HTMLDivElement>({ right: swipe?.right?.[1] ?? (() => void toggleSaved(s)), left: swipe?.left?.[1] ?? (() => hideStory(s.key, s)) })
   const comments = s.comments ?? 0
-  const inlineMedia = humour && thumbnails && !saveData && !cover ? s.media : undefined
+  const inlineMedia = casual && thumbnails && !saveData && !cover ? s.media : undefined
   const thumb = thumbnails && !inlineMedia?.length ? thumbFor(s) : undefined
   const also = [...new Set(s.alsoOn.map(sourceLabel))]
   // Other outlets' takes on the same event: what the feed grouped, plus a news search already run for it.
@@ -172,20 +173,22 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
                 {fullPost && repeated ? fullPost : s.title}
               </a>
             </Heading>
-            {excerpt && !(cover && !s.warnMediaOnly) && <p className={`mt-1 text-[0.875rem] leading-snug text-ink-2 ${fullPost ? 'whitespace-pre-line' : 'line-clamp-2'}`}>{excerpt}</p>}
+            {excerpt && !(cover && !s.warnMediaOnly) && (
+              <p className={`mt-1 text-[0.875rem] leading-snug text-ink-2 ${fullPost ? 'whitespace-pre-line' : question ? 'line-clamp-6' : 'line-clamp-2'}`}>{excerpt}</p>
+            )}
             {!!inlineMedia?.length && (
               <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
                 {inlineMedia.map((m, i) => (
-                  <MediaGallery key={i} media={[m]} href={s.discussionUrl} />
+                  <MediaGallery key={i} media={[m]} href={s.discussionUrl} alts />
                 ))}
               </div>
             )}
             {s.quote && !s.quote.gone && showExcerpts && !(cover && !s.warnMediaOnly) && (
               <div className="row-quote mt-1 text-[0.8125rem] leading-snug text-ink-3">
-                <p className={humour ? undefined : 'line-clamp-2'}>
+                <p className={casual ? undefined : 'line-clamp-2'}>
                   Quoting <span className="font-semibold text-ink-2">@{s.quote.author}</span>: {plainText(s.quote.html)}
                 </p>
-                {humour && thumbnails && !saveData && !cover && s.quote.media && (
+                {casual && thumbnails && !saveData && !cover && s.quote.media && (
                   <div className="mt-2 space-y-3" onClick={(e) => e.stopPropagation()}>
                     {s.quote.media.map((m, i) => (
                       <MediaGallery key={i} media={[m]} href={s.quote?.url} />
@@ -251,9 +254,14 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
         <div className="row-bar" onClick={(e) => e.stopPropagation()}>
           <Votes story={s} vote={vote} />
           {s.hasThread && (
-            <button className={`pill${comments > 0 && s.heat >= 0.85 ? ' hot' : ''}`} onClick={() => onOpen(s.key, 'discussion')} aria-label={`${comments} comments`} title="Open the discussion (c)">
+            <button
+              className={`pill${comments > 0 && s.heat >= 0.85 ? ' hot' : ''}`}
+              onClick={() => onOpen(s.key, 'discussion')}
+              aria-label={question && !comments ? 'Unanswered: open the question' : `${comments} comments`}
+              title="Open the discussion (c)"
+            >
               <MessageSquare size={15} aria-hidden />
-              <span className="num">{compact(comments)}</span>
+              {question && !comments ? <span>Unanswered</span> : <span className="num">{compact(comments)}</span>}
             </button>
           )}
           <SpiceMark places={[s, ...s.alsoOn]} />

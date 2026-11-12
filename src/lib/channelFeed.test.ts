@@ -9,6 +9,15 @@ const reader = testReader
 
 const kinds = (r: Reader, id: string, opts = {}) => planChannel(r, id, { sort: 'hot', blueskyEnabled: true, ...opts })!.feeds.map((f) => f.ref)
 
+describe('the lighter side', () => {
+  it('makes Top on a casual topic the best of the week from its communities', () => {
+    const lemmy = (id: string, sort: string) => kinds(reader(), id, { sort }).filter((f) => f.kind === 'lemmy')
+    expect(lemmy('humour', 'top').every((f) => f.kind === 'lemmy' && f.sort === 'TopWeek')).toBe(true)
+    expect(lemmy('humour', 'hot').some((f) => f.kind === 'lemmy' && f.sort === 'TopWeek')).toBe(false)
+    expect(lemmy('ask', 'top').some((f) => f.kind === 'lemmy' && f.sort === 'TopWeek')).toBe(false)
+  })
+})
+
 describe('planning For you', () => {
   it('offers humour as a channel and adds its sources to For you only when followed', () => {
     const humour = kinds(reader(), 'humour')

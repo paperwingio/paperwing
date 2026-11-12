@@ -4,7 +4,7 @@ import { Pip } from '../components/Pip'
 // What PaperWing keeps, where, and who sees it. Written to match the code: if something here
 // changes in the app (a new server store, a new service), this page changes with it.
 
-const UPDATED = '11 November 2026'
+const UPDATED = '13 November 2026'
 
 function Part({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -153,7 +153,7 @@ export function PrivacyPage() {
             elsewhere in an address can’t be told apart from the rest of it, so check private feeds before importing or turning your blogroll on.
           </p>
           <p>
-            A story that’s a YouTube, Vimeo or PeerTube video shows its preview picture, like any link. Nothing else from those sites loads until you press play. Then a YouTube video plays in
+            A story that’s a YouTube, Vimeo or PeerTube video shows its preview picture, like any link. Nothing else from YouTube or Vimeo loads until you press play. Then a YouTube video plays in
             YouTube’s privacy-enhanced player (youtube-nocookie.com), or a Vimeo video in Vimeo’s player with do-not-track set, in a sandboxed frame: YouTube or Vimeo sees that you played it, as it
             would on its own site. A PeerTube video’s details are read from its own server, straight from your browser, and it plays as a plain video file from wherever that server keeps it.
           </p>
@@ -166,8 +166,10 @@ export function PrivacyPage() {
         <Part title="Services involved">
           <p>
             Vercel (hosting), Upstash (the sync and cache database), Anthropic (summaries, with your key), and the networks you read and sign in to: Hacker News, Lobsters, Lemmy, Bluesky, Mastodon and
-            the sites whose feeds you follow. For the Layoffs topic, US state labour departments’ WARN pages, and employers’ job boards on Greenhouse, Ashby, Lever and Workday. YouTube, Vimeo and
-            PeerTube servers, only when you press play on one of their videos. Push notifications go through your browser maker’s push service.
+            the sites whose feeds you follow. Pixelfed (pixelfed.social), read by our server for the picture topics you follow or open, without anything about you. For the Layoffs topic, US state
+            labour departments’ WARN pages, and employers’ job boards on Greenhouse, Ashby, Lever and Workday. Sepia Search (Framasoft’s index of PeerTube servers) and PeerTube servers, asked straight
+            from your browser for the topics with videos that you follow or open, and the videos you open. YouTube and Vimeo, only when you press play on one of their videos. Tapping Something nice
+            reads Eye bleach’s sources, as opening that topic would. Push notifications go through your browser maker’s push service.
           </p>
         </Part>
 

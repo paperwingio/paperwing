@@ -26,6 +26,10 @@ export type FeedRef =
   | { kind: 'paperwing'; sort: 'hot' | 'new' | 'top'; board?: string }
   /** Headlines from anywhere matching a search (news search RSS): what makes a free-text interest work for any subject. */
   | { kind: 'news'; q: string }
+  /** PeerTube videos: one category's trending across servers (Sepia Search), or one server's own trending. */
+  | { kind: 'peertube'; category?: number; host?: string }
+  /** Pixelfed photos (pixelfed.social's Discover, through api/feed.ts): today's trending, or one hashtag. */
+  | { kind: 'pixelfed'; tag?: string }
   /** Mastodon through the reader's server: its tech trends, hashtags, or their home timeline. */
   | { kind: 'mastodon'; feed: 'trends' | 'home' | 'tags'; tags?: string[]; topic?: string; topics?: string[] }
   /** What someone has listed on PaperWing, newest first (api/_lib/people.ts). `actor` is a handle or DID. */
@@ -39,7 +43,7 @@ export type FeedRef =
   /** One state's WARN notices (layoff filings) from employers PaperWing follows, by its two-letter code. */
   | { kind: 'warn'; state: string }
 
-export type ClusterId = 'intelligence' | 'systems' | 'code' | 'world' | 'news' | 'science' | 'culture' | 'sport' | 'making' | 'life'
+export type ClusterId = 'intelligence' | 'systems' | 'code' | 'world' | 'news' | 'science' | 'culture' | 'sport' | 'making' | 'life' | 'lighter'
 
 /** Topics come in packs: tech (where PaperWing started) and everything else. */
 export type Pack = 'tech' | 'general'
@@ -51,6 +55,7 @@ export const CLUSTERS: Record<ClusterId, { label: string; blurb: string; pack: P
   sport: { label: 'Sport', blurb: 'Find your sport, follow your team or try something new', pack: 'general' },
   making: { label: 'Making', blurb: 'Tools, textiles, circuits and things people build', pack: 'general' },
   life: { label: 'Life', blurb: 'The everyday good stuff', pack: 'general' },
+  lighter: { label: 'Lighter side', blurb: 'Memes, questions, good animals and the odd thing worth a look', pack: 'general' },
   intelligence: { label: 'Intelligence', blurb: 'Models, agents, papers and the hardware under them', pack: 'tech' },
   systems: { label: 'Systems', blurb: 'Running software in production and knowing what it is doing', pack: 'tech' },
   code: { label: 'Code', blurb: 'Languages, craft and the open source commons', pack: 'tech' },
@@ -92,10 +97,28 @@ export interface Topic {
   mastodon?: string[]
   /** Status pages whose incidents belong here, by id from api/_lib/statuspages.ts; 'all' for every one. */
   status?: string[] | 'all'
+  /**
+   * Read for fun, not news: likes count without needing replies, social posts aren't treated as
+   * commentary, and rows show short posts and pictures in full.
+   */
+  casual?: boolean
+  /** Questions people asked: rows show the whole question, and say when nobody has answered yet. */
+  questions?: boolean
 }
 
 export const TOPICS: Topic[] = [...TECH_TOPICS, ...GENERAL_TOPICS]
 export const TOPIC_BY_ID = new Map(TOPICS.map((t) => [t.id, t]))
+
+const CASUAL = new Set(TOPICS.filter((t) => t.casual).map((t) => t.id))
+/** Whether any of a story's topics is read for fun (see `Topic.casual`). */
+export const isCasual = (topics: readonly string[]) => topics.some((t) => CASUAL.has(t))
+
+const QUESTIONS = new Set(TOPICS.filter((t) => t.questions).map((t) => t.id))
+/** Whether a story is a question someone asked (see `Topic.questions`). */
+export const isQuestion = (topics: readonly string[]) => topics.some((t) => QUESTIONS.has(t))
+
+/** Curated Bluesky feeds by URI, with the name a topic gives them: their posts are labelled with it. */
+export const CURATED_FEEDS = new Map(TOPICS.flatMap((t) => t.feeds.flatMap((f) => (f.kind === 'bskyFeed' ? [[f.uri, f.name] as const] : []))))
 
 /** Whether a topic belongs to the tech pack: a free-text interest counts as neither. */
 export const isTechTopic = (id: string) => {
@@ -151,6 +174,14 @@ function patternsFor(topic: Pick<Topic, 'id' | 'terms'>): RegExp[] {
   return list
 }
 
+/** PeerTube's video categories (the same ids on every server) that topics read. */
+const PEERTUBE_CATEGORIES: Record<number, string> = { 7: 'Gaming', 9: 'Comedy', 16: 'Animals', 18: 'Food' }
+/** A PeerTube feed's name, which its videos carry as their label. */
+export const peertubeLabel = (r: { category?: number; host?: string }) => (r.category ? `PeerTube ${PEERTUBE_CATEGORIES[r.category] ?? 'videos'}` : (r.host ?? 'PeerTube'))
+
+/** A Pixelfed feed's name, which its posts carry as their label (api/_lib/pixelfed.ts names them the same). */
+export const pixelfedLabel = (r: { tag?: string }) => (r.tag ? `Pixelfed #${r.tag}` : 'Pixelfed')
+
 /** Topics a source is dedicated to: anything from r/sre is SRE even if the title doesn't say so. */
 const DEDICATED = new Map<string, string[]>()
 for (const t of TOPICS) {
@@ -160,15 +191,19 @@ for (const t of TOPICS) {
         ? [f.label.toLowerCase()]
         : f.kind === 'bskyFeed'
           ? [f.name.toLowerCase()]
-          : f.kind === 'devto'
-            ? [`dev.to #${f.tag}`]
-            : f.kind === 'lobsters' && f.path.startsWith('t/')
-              ? []
-              : f.kind === 'hf'
-                ? ['hf papers']
-                : f.kind === 'arxiv' && t.id === 'ml-research'
-                  ? ['arxiv']
-                  : []
+          : f.kind === 'peertube'
+            ? [peertubeLabel(f).toLowerCase()]
+            : f.kind === 'pixelfed'
+              ? [pixelfedLabel(f).toLowerCase()]
+              : f.kind === 'devto'
+                ? [`dev.to #${f.tag}`]
+                : f.kind === 'lobsters' && f.path.startsWith('t/')
+                  ? []
+                  : f.kind === 'hf'
+                    ? ['hf papers']
+                    : f.kind === 'arxiv' && t.id === 'ml-research'
+                      ? ['arxiv']
+                      : []
     for (const l of labels) DEDICATED.set(l, [...(DEDICATED.get(l) ?? []), t.id])
   }
   // A dedicated Lemmy community's posts belong to the topic whatever they say (c/localllama is LLMs).
@@ -218,7 +253,9 @@ export function topicsForStory(s: Story, extra: Topic[] = []): string[] {
   // A copy: callers add to it (a cluster's leader takes its members' topics).
   if (cached) return [...cached]
   const found = new Set(DEDICATED.get(s.sourceLabel.toLowerCase()) ?? [])
-  for (const t of [...TOPICS, ...extra]) if (!found.has(t.id) && matchesTopic(t, text)) found.add(t.id)
+  // A casual topic changes how a story ranks and looks, so its keywords (#shitpost, #caturday) only
+  // count on its own page, which passes it in `extra`; elsewhere only its own sources carry it.
+  for (const t of [...TOPICS, ...extra]) if (!found.has(t.id) && !(t.casual && !extra.some((e) => e.id === t.id)) && matchesTopic(t, text)) found.add(t.id)
   const topics = [...found]
   if (storyTopics.size > 5000) storyTopics.clear()
   storyTopics.set(key, topics)

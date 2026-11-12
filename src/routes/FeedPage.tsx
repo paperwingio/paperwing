@@ -1,4 +1,4 @@
-import { Fragment, startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { channelId as toChannelId } from '../lib/channelId'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { ChannelBrief } from '../components/ChannelBrief'
@@ -7,6 +7,8 @@ import { FeedEmpty, FeedFailed } from '../components/FeedState'
 import { OutageBanner } from '../components/OutageWatch'
 import { Split, useListKeys } from '../components/Split'
 import { RowSkeleton, StoryRow } from '../components/StoryRow'
+import { GridToggle } from '../components/GridToggle'
+import { saveData } from '../components/Thumb'
 import { TypesetLoader } from '../components/pretext/TypesetLoader'
 import { BoardContext, useBoard } from '../lib/boards'
 import { PullToRefresh } from '../components/PullToRefresh'
@@ -20,6 +22,8 @@ import { useActivity, usePrefs } from '../lib/store'
 import type { SourceKind } from '../lib/types'
 
 const PAGE = 50
+// Only for picture-led channels shown as a grid: loads when first asked for.
+const PictureGrid = lazy(() => import('../components/PictureGrid').then((m) => ({ default: m.PictureGrid })))
 /** Rows rendered straight away when a list changes: a screen and a bit. The rest follow a frame later. */
 const FIRST = 10
 // Topics where a provider outage is news.
@@ -31,6 +35,8 @@ export function FeedPage() {
   const channelId = actor ? toChannelId({ kind: 'person', actor }) : boardDid && boardRkey ? toChannelId({ kind: 'board', did: boardDid, rkey: boardRkey }) : (channelParam ?? 'for-you')
   const [params, setParams] = useSearchParams()
   const hideRead = usePrefs((p) => p.hideRead)
+  const pictureGrid = usePrefs((p) => p.pictureGrid)
+  const thumbnails = usePrefs((p) => p.thumbnails)
   const feedOrder = usePrefs((p) => p.feedOrder)
   const variant = params.get('v') ?? undefined
   // Your default order (Settings, Tuning) unless the address picks one.
@@ -168,16 +174,24 @@ export function FeedPage() {
                 toTop()
               }}
             />
-            <div role={visible.length ? 'feed' : undefined} aria-busy={steady.loading}>
-              {steady.loading && !visible.length && pretext && <TypesetLoader label={channel.label} />}
-              {steady.loading && !visible.length && Array.from({ length: pretext ? 4 : 8 }, (_, i) => <RowSkeleton key={i} />)}
-              {visible.slice(0, rendered).map((s, i) => (
-                <Fragment key={s.key}>
-                  {i === caughtUp && <CaughtUp />}
-                  <StoryRow story={s} selected={s.key === (itemKey ?? cursor)} read={!!read[s.key] && s.key !== itemKey} onOpen={open} now={now} why={tasteOrders} hideTopic={channel.topic?.id} />
-                </Fragment>
-              ))}
-            </div>
+            {/* A picture-led channel can be a grid; never with pictures off or the browser saving data. */}
+            {channel.topic?.casual && thumbnails && !saveData && <GridToggle />}
+            {channel.topic?.casual && thumbnails && !saveData && pictureGrid && visible.length > 0 ? (
+              <Suspense fallback={null}>
+                <PictureGrid stories={visible.slice(0, rendered)} selected={itemKey ?? cursor} read={read} onOpen={open} />
+              </Suspense>
+            ) : (
+              <div role={visible.length ? 'feed' : undefined} aria-busy={steady.loading}>
+                {steady.loading && !visible.length && pretext && <TypesetLoader label={channel.label} />}
+                {steady.loading && !visible.length && Array.from({ length: pretext ? 4 : 8 }, (_, i) => <RowSkeleton key={i} />)}
+                {visible.slice(0, rendered).map((s, i) => (
+                  <Fragment key={s.key}>
+                    {i === caughtUp && <CaughtUp />}
+                    <StoryRow story={s} selected={s.key === (itemKey ?? cursor)} read={!!read[s.key] && s.key !== itemKey} onOpen={open} now={now} why={tasteOrders} hideTopic={channel.topic?.id} />
+                  </Fragment>
+                ))}
+              </div>
+            )}
             {allFailed && <FeedFailed offline={!navigator.onLine} statuses={feed.statuses} onRetry={() => void refresh()} />}
             {channel.empty && !channel.feeds.length && (
               <div className="px-6 py-16 text-center">

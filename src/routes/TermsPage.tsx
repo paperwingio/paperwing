@@ -4,7 +4,7 @@ import { Pip } from '../components/Pip'
 // The terms of using PaperWing, in plain words. Like the privacy page, written to match what the app
 // actually does: if a promise here changes in the code, it changes here too.
 
-const UPDATED = '11 November 2026'
+const UPDATED = '12 November 2026'
 
 function Part({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -35,8 +35,8 @@ export function TermsPage() {
 
         <Part title="What PaperWing is">
           <p>
-            PaperWing gathers stories and discussions from other places (Hacker News, Lobsters, Lemmy, Bluesky, Mastodon, and the sites and feeds you follow) and lets you read, save and join in. It
-            doesn’t host those networks or their content, and it isn’t affiliated with any of them.
+            PaperWing gathers stories and discussions from other places (Hacker News, Lobsters, Lemmy, Bluesky, Mastodon, PeerTube, Pixelfed, and the sites and feeds you follow) and lets you read,
+            save and join in. It doesn’t host those networks or their content, and it isn’t affiliated with any of them.
           </p>
           <p>It’s free, it’s new, and it will change: features may be added, changed or removed, and it may be unavailable at times.</p>
         </Part>

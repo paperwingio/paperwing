@@ -14,6 +14,7 @@ describe('story keys', () => {
       { kind: 'lm', id: '42', via: 'programming.dev' },
       { kind: 'lm', id: '42', via: 'lemmy.world' },
       { kind: 'md', instance: 'hachyderm.io', id: '113000000000000001' },
+      { kind: 'pt', instance: 'tube-a.example', id: 'kDDq4SvZbZqsTkWkm7iNhA' },
     ] as const
     for (const parts of all) expect(parseStoryKey(storyKey(parts))).toEqual(parts)
   })

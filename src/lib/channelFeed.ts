@@ -5,7 +5,7 @@ import { momentumOf } from './momentum'
 import { merge, type Memory, type Ranked, type SortMode } from './rank'
 import { feedId, feedLabel, newestOf } from './sources'
 import type { BlueskyFeed, CustomFeed, FollowedMix, Interest, LemmyCommunity, Mix } from './store'
-import { matchesTopic, storyText, TOPIC_BY_ID, type FeedRef, type Topic } from './topics'
+import { CURATED_FEEDS, matchesTopic, storyText, type FeedRef, type Topic } from './topics'
 import type { Story } from './types'
 
 // The channel feed: from a reader and a channel to the stories it shows, in order. Every page that
@@ -108,6 +108,8 @@ export function planChannel(reader: Reader, channelId: string, opts: PlanOptions
   const feeds = channel.feeds
     .filter((f) => opts.blueskyEnabled || f.kind !== 'bluesky')
     .map((f) => (latest ? newestOf(f) : f))
+    // Top on a casual topic is the best of the week: its communities' week, not just what's fetched now.
+    .map((f) => (opts.sort === 'top' && channel.topic?.casual && f.kind === 'lemmy' ? { ...f, sort: 'TopWeek' as const } : f))
     .map((ref) => ({ ref, id: feedId(ref, reader), label: feedLabel(ref) }))
   return { channel, feeds, sort: opts.sort }
 }
@@ -129,10 +131,8 @@ export function rankChannel(plan: ChannelPlan, reader: Reader, batches: (Story[]
     // Keyword searches are noisy: keep only results that really are about the topic they were run for.
     if (topics.length) data = data.filter((s) => topics.some((t) => matchesTopic(t, storyText(s))))
     const ref = f.ref
-    if (ref.kind === 'bskyFeed') {
-      const curated = TOPIC_BY_ID.get('humour')?.feeds.find((b) => b.kind === 'bskyFeed' && b.uri === ref.uri)
-      if (curated?.kind === 'bskyFeed') data = data.map((s) => ({ ...s, sourceLabel: curated.name }))
-    }
+    const curated = ref.kind === 'bskyFeed' ? CURATED_FEEDS.get(ref.uri) : undefined
+    if (curated) data = data.map((s) => ({ ...s, sourceLabel: curated }))
     if (f.ref.kind === 'boardpicks') data = unsuggestJoined(data, joined)
     if (!reader.announcements) data = withoutAnnouncements(data, forYou)
     // On a board's own page, every post is from it: no need to say so.
@@ -147,6 +147,8 @@ export function rankChannel(plan: ChannelPlan, reader: Reader, batches: (Story[]
     momentum: momentumOf(checked.map((stories, i) => ({ stories, at: fetchedAt[i] || Date.now() }))),
     // For you takes a few strong stories from outside your usual.
     explore: forYou,
+    // A casual topic's keywords count on its own page and for a reader who follows it: a #shitpost post there is a shitpost.
+    own: [plan.channel.topic, ...reader.followed.map((id) => findTopic(id, reader.interests))].filter((t): t is Topic => !!t?.casual),
   })
 }
 
@@ -160,14 +162,18 @@ function withoutAnnouncements(data: Story[], forYou: boolean): Story[] {
 }
 
 /** Any batches of stories (search results, say), moderated and ranked for the reader the way a channel is. */
-export function rankStories(reader: Reader, batches: Story[][], opts: { sort: SortMode; native?: boolean; boost?: string[]; momentum?: Record<string, number>; explore?: boolean }): Ranked[] {
+export function rankStories(
+  reader: Reader,
+  batches: Story[][],
+  opts: { sort: SortMode; native?: boolean; boost?: string[]; momentum?: Record<string, number>; explore?: boolean; own?: Topic[] },
+): Ranked[] {
   const moderated = batches.map((b) => b.flatMap((s) => moderateStory(s, reader.labelers, reader.warnings) ?? []))
   const { memory, affinity, votes } = reader.taste()
   return merge(moderated, {
     sort: opts.sort,
     native: opts.native,
     boost: opts.boost,
-    extraTopics: allTopics(reader.interests).filter((t) => t.id.startsWith('q:')),
+    extraTopics: [...allTopics(reader.interests).filter((t) => t.id.startsWith('q:')), ...(opts.own ?? [])],
     filters: { mutedWords: reader.mutedWords, mutedDomains: reader.mutedDomains, hidden: reader.hidden },
     memory,
     momentum: opts.momentum,

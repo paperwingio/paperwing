@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { SourceKind } from '../lib/types'
 import { FeedIcon, PaperwingIcon, SourceIcon, StoryIcon } from './SourceIcon'
 
-const KINDS: SourceKind[] = ['hn', 'lobsters', 'devto', 'hf', 'arxiv', 'github', 'release', 'bluesky', 'lemmy', 'mastodon', 'frontpage', 'status', 'rss']
+const KINDS: SourceKind[] = ['hn', 'lobsters', 'devto', 'hf', 'arxiv', 'github', 'release', 'bluesky', 'lemmy', 'mastodon', 'peertube', 'pixelfed', 'frontpage', 'status', 'rss']
 
 const meta = {
   title: 'Brand/SourceIcon',

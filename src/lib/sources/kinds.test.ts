@@ -38,6 +38,11 @@ const SAMPLES: { [K in FeedRef['kind']]: Ref<K>[] } = {
     { kind: 'mastodon', feed: 'trends' },
     { kind: 'mastodon', feed: 'tags', tags: ['science'] },
   ],
+  peertube: [
+    { kind: 'peertube', category: 16 },
+    { kind: 'peertube', host: 'tilvids.com' },
+  ],
+  pixelfed: [{ kind: 'pixelfed' }, { kind: 'pixelfed', tag: 'cats' }],
   news: [{ kind: 'news', q: 'sourdough' }],
   paperwing: [
     { kind: 'paperwing', sort: 'hot' },

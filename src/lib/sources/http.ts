@@ -59,6 +59,7 @@ export type FeedSource =
   | 'frontpage'
   | 'arxiv'
   | 'hf'
+  | 'pixelfed'
   | 'icon'
   | 'og'
   | 'releases'

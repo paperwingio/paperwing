@@ -6,14 +6,14 @@ import { LEMMY_DEFAULT } from './lemmyKey.js'
 //
 //   hn-<id>  lb-<id>  dv-<id>  st-<provider>-<incident>  wn-<state>-<notice>
 //   bs-<base64url at:// URI>  fp-<base64url at:// URI>  ln-<base64url URL>
-//   lm-<id>[@<instance>] (programming.dev unless said)  md-<server>-<status id>
+//   lm-<id>[@<instance>] (programming.dev unless said)  md-<server>-<status id>  pt-<server>-<video short uuid>
 
 export type StoryKeyParts =
   | { kind: 'hn' | 'lb' | 'dv' | 'st' | 'wn'; id: string }
   | { kind: 'bs' | 'fp'; uri: string }
   | { kind: 'ln'; url: string }
   | { kind: 'lm'; id: string; via: string }
-  | { kind: 'md'; instance: string; id: string }
+  | { kind: 'md' | 'pt'; instance: string; id: string }
 
 export function storyKey(p: StoryKeyParts): string {
   switch (p.kind) {
@@ -31,7 +31,8 @@ export function storyKey(p: StoryKeyParts): string {
     case 'lm':
       return p.via === LEMMY_DEFAULT ? `lm-${p.id}` : `lm-${p.id}@${p.via}`
     case 'md':
-      return `md-${p.instance}-${p.id}`
+    case 'pt':
+      return `${p.kind}-${p.instance}-${p.id}`
   }
 }
 
@@ -60,8 +61,9 @@ export function parseStoryKey(key: string): StoryKeyParts | undefined {
       const m = /^(\d+)(?:@([a-z0-9.-]+))?$/.exec(rest)
       return m ? { kind, id: m[1], via: m[2] ?? LEMMY_DEFAULT } : undefined
     }
-    case 'md': {
-      // Server names can have hyphens; status ids can't.
+    case 'md':
+    case 'pt': {
+      // Server names can have hyphens; status ids and PeerTube's short ids can't.
       const at = rest.lastIndexOf('-')
       return at > 0 && at < rest.length - 1 ? { kind, instance: rest.slice(0, at), id: rest.slice(at + 1) } : undefined
     }
