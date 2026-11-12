@@ -73,6 +73,8 @@ describe('lighter side readers', () => {
     expect(topicsForStory({ ...story('Sunday nap'), source: 'mastodon', sourceLabel: 'Mastodon', tags: ['caturday'] }, [TOPIC_BY_ID.get('eye-bleach')!])).toContain('eye-bleach')
     expect(topicsForStory(story('The cat economy is booming, say analysts'))).not.toContain('eye-bleach')
     expect(topicsForStory({ ...story('Ginger and a fidget spinner'), source: 'peertube', sourceLabel: 'PeerTube Animals' })).toContain('eye-bleach')
+    expect(topicsForStory({ ...story('Autumn leaves'), source: 'pixelfed', sourceLabel: 'Pixelfed' })).toContain('pictures')
+    expect(topicsForStory({ ...story('Sunday nap'), source: 'pixelfed', sourceLabel: 'Pixelfed #cats' })).toContain('eye-bleach')
   })
 })
 

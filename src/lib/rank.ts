@@ -81,6 +81,8 @@ const REFERENCE: Record<SourceKind, [score: number, comments: number]> = {
   mastodon: [40, 8],
   // PeerTube is small: half a dozen likes is a well-liked video.
   peertube: [8, 3],
+  // Pixelfed's trending posts collect a hundred or two likes on a good day.
+  pixelfed: [60, 4],
   // Frontpage is small: a dozen votes is a good day there.
   frontpage: [12, 3],
   status: [0, 0],

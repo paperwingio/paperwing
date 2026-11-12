@@ -24,6 +24,7 @@ import {
   siMastodon,
   siMeta,
   siPeertube,
+  siPixelfed,
   siMozilla,
   siNetflix,
   siNvidia,
@@ -57,6 +58,7 @@ const BY_KIND: Partial<Record<SourceKind, SimpleIcon>> = {
   lemmy: siLemmy,
   mastodon: siMastodon,
   peertube: siPeertube,
+  pixelfed: siPixelfed,
 }
 
 const BY_HOST: [string, SimpleIcon][] = [

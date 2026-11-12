@@ -1,4 +1,4 @@
-export type SourceKind = 'hn' | 'lobsters' | 'devto' | 'hf' | 'arxiv' | 'github' | 'release' | 'rss' | 'bluesky' | 'lemmy' | 'mastodon' | 'status' | 'frontpage' | 'warn' | 'peertube'
+export type SourceKind = 'hn' | 'lobsters' | 'devto' | 'hf' | 'arxiv' | 'github' | 'release' | 'rss' | 'bluesky' | 'lemmy' | 'mastodon' | 'status' | 'frontpage' | 'warn' | 'peertube' | 'pixelfed'
 
 /** An image or video attached to a post (Bluesky). */
 export interface Media {

@@ -28,6 +28,8 @@ export type FeedRef =
   | { kind: 'news'; q: string }
   /** PeerTube videos: one category's trending across servers (Sepia Search), or one server's own trending. */
   | { kind: 'peertube'; category?: number; host?: string }
+  /** Pixelfed photos (pixelfed.social's Discover, through api/feed.ts): today's trending, or one hashtag. */
+  | { kind: 'pixelfed'; tag?: string }
   /** Mastodon through the reader's server: its tech trends, hashtags, or their home timeline. */
   | { kind: 'mastodon'; feed: 'trends' | 'home' | 'tags'; tags?: string[]; topic?: string; topics?: string[] }
   /** What someone has listed on PaperWing, newest first (api/_lib/people.ts). `actor` is a handle or DID. */
@@ -171,6 +173,9 @@ const PEERTUBE_CATEGORIES: Record<number, string> = { 7: 'Gaming', 9: 'Comedy', 
 /** A PeerTube feed's name, which its videos carry as their label. */
 export const peertubeLabel = (r: { category?: number; host?: string }) => (r.category ? `PeerTube ${PEERTUBE_CATEGORIES[r.category] ?? 'videos'}` : (r.host ?? 'PeerTube'))
 
+/** A Pixelfed feed's name, which its posts carry as their label (api/_lib/pixelfed.ts names them the same). */
+export const pixelfedLabel = (r: { tag?: string }) => (r.tag ? `Pixelfed #${r.tag}` : 'Pixelfed')
+
 /** Topics a source is dedicated to: anything from r/sre is SRE even if the title doesn't say so. */
 const DEDICATED = new Map<string, string[]>()
 for (const t of TOPICS) {
@@ -182,15 +187,17 @@ for (const t of TOPICS) {
           ? [f.name.toLowerCase()]
           : f.kind === 'peertube'
             ? [peertubeLabel(f).toLowerCase()]
-            : f.kind === 'devto'
-              ? [`dev.to #${f.tag}`]
-              : f.kind === 'lobsters' && f.path.startsWith('t/')
-                ? []
-                : f.kind === 'hf'
-                  ? ['hf papers']
-                  : f.kind === 'arxiv' && t.id === 'ml-research'
-                    ? ['arxiv']
-                    : []
+            : f.kind === 'pixelfed'
+              ? [pixelfedLabel(f).toLowerCase()]
+              : f.kind === 'devto'
+                ? [`dev.to #${f.tag}`]
+                : f.kind === 'lobsters' && f.path.startsWith('t/')
+                  ? []
+                  : f.kind === 'hf'
+                    ? ['hf papers']
+                    : f.kind === 'arxiv' && t.id === 'ml-research'
+                      ? ['arxiv']
+                      : []
     for (const l of labels) DEDICATED.set(l, [...(DEDICATED.get(l) ?? []), t.id])
   }
   // A dedicated Lemmy community's posts belong to the topic whatever they say (c/localllama is LLMs).

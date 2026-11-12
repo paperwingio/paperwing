@@ -35,8 +35,8 @@ export function TermsPage() {
 
         <Part title="What PaperWing is">
           <p>
-            PaperWing gathers stories and discussions from other places (Hacker News, Lobsters, Lemmy, Bluesky, Mastodon, PeerTube, and the sites and feeds you follow) and lets you read, save and join
-            in. It doesn’t host those networks or their content, and it isn’t affiliated with any of them.
+            PaperWing gathers stories and discussions from other places (Hacker News, Lobsters, Lemmy, Bluesky, Mastodon, PeerTube, Pixelfed, and the sites and feeds you follow) and lets you read,
+            save and join in. It doesn’t host those networks or their content, and it isn’t affiliated with any of them.
           </p>
           <p>It’s free, it’s new, and it will change: features may be added, changed or removed, and it may be unavailable at times.</p>
         </Part>

@@ -199,3 +199,79 @@ describe('the fan-out allowance', () => {
     expect((await discover('203.0.113.9')).status).toBe(429)
   })
 })
+
+const pixelfedPost = (o: Record<string, unknown> = {}) => ({
+  id: '1026224094914640698',
+  url: 'https://pixelfed.social/p/TorbenKlint/1026224094914640698',
+  created_at: '2026-11-11T20:08:10.000Z',
+  content: 'The last leaves the autumn.<br /><br /><a href="https://pixelfed.social/discover/tags/color">#color</a>',
+  content_text: 'The last leaves the autumn.\n\n#color',
+  favourites_count: 216,
+  reply_count: 3,
+  sensitive: false,
+  spoiler_text: '',
+  visibility: 'public',
+  reblog: null,
+  account: { acct: 'TorbenKlint' },
+  media_attachments: [{ type: 'image', url: 'https://pxscdn.com/a.jpg', preview_url: 'https://pxscdn.com/a_thumb.jpg', description: 'Yellow leaves', meta: { original: { aspect: 0.75 } } }],
+  ...o,
+})
+
+describe('pixelfed', () => {
+  it('turns Pixelfed’s trending posts into picture stories that link to the post', async () => {
+    net.get('https://pixelfed.social').intercept({ path: '/api/pixelfed/v2/discover/posts/trending?range=daily' }).reply(200, [pixelfedPost()])
+    const res = await call<Record<string, unknown>[]>(GET, '/api/feed?src=pixelfed')
+    expect(res.status).toBe(200)
+    expect(res.body[0]).toMatchObject({
+      source: 'pixelfed',
+      sourceLabel: 'Pixelfed',
+      title: 'The last leaves the autumn.',
+      url: 'https://pixelfed.social/p/TorbenKlint/1026224094914640698',
+      author: 'TorbenKlint@pixelfed.social',
+      score: 216,
+      comments: 3,
+      hasThread: false,
+      media: [{ kind: 'image', thumb: 'https://pxscdn.com/a_thumb.jpg', full: 'https://pxscdn.com/a.jpg', alt: 'Yellow leaves', aspect: 0.75 }],
+    })
+    expect(res.headers.get('cache-control')).toContain(`s-maxage=${SOURCES.pixelfed.ttl}`)
+  })
+
+  it('reads a hashtag, keeping the server a remote post came from', async () => {
+    net
+      .get('https://pixelfed.social')
+      .intercept({ path: '/api/v2/discover/tag?hashtag=cats' })
+      .reply(200, { tags: [{ status: pixelfedPost({ url: 'https://toot.cat/@ponyo/1', account: { acct: 'ponyo@toot.cat' } }) }] })
+    const res = await call<Record<string, unknown>[]>(GET, '/api/feed?src=pixelfed&tag=cats')
+    expect(res.body[0]).toMatchObject({ sourceLabel: 'Pixelfed #cats', author: 'ponyo@toot.cat', url: 'https://toot.cat/@ponyo/1' })
+  })
+
+  it('leaves out sensitive, warned, non-public, boosted, picture-less and non-https posts', async () => {
+    net
+      .get('https://pixelfed.social')
+      .intercept({ path: '/api/pixelfed/v2/discover/posts/trending?range=daily' })
+      .reply(200, [
+        pixelfedPost({ sensitive: true }),
+        pixelfedPost({ visibility: 'unlisted' }),
+        pixelfedPost({ media_attachments: [] }),
+        pixelfedPost({ spoiler_text: 'gore' }),
+        pixelfedPost({ reblog: pixelfedPost() }),
+        pixelfedPost({ url: 'http://pixelfed.social/p/x/1' }),
+        pixelfedPost({ media_attachments: [{ type: 'image', url: 'http://pxscdn.com/a.jpg' }] }),
+      ])
+    expect((await call<unknown[]>(GET, '/api/feed?src=pixelfed')).body).toEqual([])
+  })
+
+  it('shows the full picture when its preview isn’t https', async () => {
+    const media = [{ type: 'image', url: 'https://pxscdn.com/a.jpg', preview_url: 'http://pxscdn.com/a_thumb.jpg' }]
+    net
+      .get('https://pixelfed.social')
+      .intercept({ path: '/api/pixelfed/v2/discover/posts/trending?range=daily' })
+      .reply(200, [pixelfedPost({ media_attachments: media })])
+    const res = await call<{ media: { thumb: string }[] }[]>(GET, '/api/feed?src=pixelfed')
+    expect(res.body[0].media[0].thumb).toBe('https://pxscdn.com/a.jpg')
+  })
+
+  it('refuses a hashtag that isn’t one, without asking Pixelfed', async () => {
+    expect((await call(GET, '/api/feed?src=pixelfed&tag=cats%2F..%2Fadmin')).status).toBe(400)
+  })
+})

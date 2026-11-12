@@ -95,6 +95,11 @@ export const siPeertube: Logo = {
   hex: 'F1680D',
   path: 'M12 6.545v10.91L20.727 12M3.273 12v12L12 17.455M3.273 0v12L12 6.545',
 }
+export const siPixelfed: Logo = {
+  title: 'Pixelfed',
+  hex: '6366F1',
+  path: 'M12 24C5.3726 24 0 18.6274 0 12S5.3726 0 12 0s12 5.3726 12 12-5.3726 12-12 12m-.9526-9.3802h2.2014c2.0738 0 3.7549-1.6366 3.7549-3.6554S15.3226 7.309 13.2488 7.309h-3.1772c-1.1964 0-2.1663.9442-2.1663 2.1089v8.208z',
+}
 export const siLobsters: Logo = {
   title: 'Lobsters',
   hex: 'AC130D',

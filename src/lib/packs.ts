@@ -80,6 +80,7 @@ export const GENERAL_TOPICS: Topic[] = [
       { kind: 'bskyFeed', uri: 'at://did:plc:plqr56q7y23it22h6txnhavh/app.bsky.feed.generator/aaaae2kpch3jg', name: 'Dogs of Bluesky' },
       { kind: 'bskyFeed', uri: 'at://did:plc:ffkgesg3jsv2j7aagkzrtcvt/app.bsky.feed.generator/aaan2gurxv3kk', name: 'Mammals!' },
       { kind: 'peertube', category: 16 },
+      { kind: 'pixelfed', tag: 'cats' },
     ],
     lemmy: [
       { community: 'aww@lemmy.world', via: LW },
@@ -152,7 +153,7 @@ export const GENERAL_TOPICS: Topic[] = [
     aliases: ['pics', 'photos', 'pixelfed', 'nature photos', 'photo of the day'],
     terms: ['pixelfed'],
     related: ['photography', 'eye-bleach', 'oddly-interesting'],
-    feeds: [{ kind: 'bskyFeed', uri: 'at://did:plc:cngpbn4gngkf7oenuzysanng/app.bsky.feed.generator/aaaeu3w7ci7aw', name: 'Nature Photography' }],
+    feeds: [{ kind: 'pixelfed' }, { kind: 'bskyFeed', uri: 'at://did:plc:cngpbn4gngkf7oenuzysanng/app.bsky.feed.generator/aaaeu3w7ci7aw', name: 'Nature Photography' }],
     lemmy: [{ community: 'pics@lemmy.world', via: LW }],
     mastodon: ['pixelfed', 'photooftheday'],
   },

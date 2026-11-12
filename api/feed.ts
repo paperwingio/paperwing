@@ -14,6 +14,7 @@ import { marginNotes } from './_lib/notes.js'
 import { allBoards, boardFront, readBoard } from './_lib/boards.js'
 import { boardPicks } from './_lib/boardPicks.js'
 import { arxiv, github, hfPapers, lobsters, newsSearch, releases, rss } from './_lib/sources.js'
+import { pixelfed } from './_lib/pixelfed.js'
 import { checkStatusPage, statusIncidents } from './_lib/statuspages.js'
 import { standardFeed, StandardRateLimit } from './_lib/standard.js'
 import { hiring } from './_lib/hiring.js'
@@ -117,6 +118,15 @@ export const SOURCES: Record<FeedSource, Source> = {
   frontpage: { ttl: 300, run: (p) => frontpageFeed(sortOf(p.get('feed'))) },
   arxiv: { ttl: 1800, run: (p) => arxiv(p.get('q') ?? 'cat:cs.AI') },
   hf: { ttl: 1800, run: () => hfPapers() },
+  // Pixelfed's trending posts, or one hashtag's: a plain word only, since it goes into Pixelfed's address.
+  pixelfed: {
+    ttl: 900,
+    run: (p) => {
+      const tag = p.get('tag') ?? undefined
+      if (tag !== undefined && !/^[\p{L}\p{N}_]{1,60}$/u.test(tag)) throw new BadRequest('tag must be a single hashtag')
+      return pixelfed(tag)
+    },
+  },
   // A site's own favicon, for sources Simple Icons has no logo for. Cached a week; misses for a day.
   // An SVG icon may carry styles, so those are allowed; scripts never are.
   icon: {
