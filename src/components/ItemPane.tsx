@@ -11,7 +11,7 @@ import { stateOf, useLibrary } from '../lib/library'
 import type { Ranked } from '../lib/rank'
 import { useActivity, usePrefs } from '../lib/store'
 import { useAtproto } from '../lib/atproto'
-import { judge, moderateComments } from '../lib/moderation'
+import { HIDDEN_QUOTE, judgeStory, moderateComments } from '../lib/moderation'
 import { useSpoilers } from '../lib/spice'
 import { useOutlets } from '../lib/coverage'
 import { Covered } from './Covered'
@@ -73,7 +73,7 @@ export function ItemPane({ itemKey, onClose, onOpen }: Props) {
   }, [thread.data, articleTitle, known])
   // Content warnings and folded comments: judged here too, since an opened thread arrives unjudged.
   const { labelers, warnings, mutedWords } = usePrefs()
-  const verdict = useMemo(() => (story ? judge(story.labels, story.authorDid, labelers) : {}), [story, labelers])
+  const verdict = useMemo(() => (story ? judgeStory(story, labelers) : {}), [story, labelers])
   const cw = warnings === 'show' ? undefined : (verdict.warning ?? story?.warning)
   const cwMediaOnly = verdict.warning ? verdict.mediaOnly : story?.warnMediaOnly
   const spoilers = useSpoilers(known ?? story)
@@ -366,7 +366,9 @@ export function ItemPane({ itemKey, onClose, onOpen }: Props) {
                       )}
                       {story.quote && (
                         <div className={story.text || story.media ? 'mt-4' : undefined}>
-                          <QuoteCard quote={story.quote} onOpen={(k) => onOpen(k, 'discussion')} />
+                          <Covered warning={cw ? `Content warning: ${cw}` : undefined}>
+                            <QuoteCard quote={verdict.quoteHidden ? HIDDEN_QUOTE : story.quote} onOpen={(k) => onOpen(k, 'discussion')} />
+                          </Covered>
                         </div>
                       )}
                     </div>

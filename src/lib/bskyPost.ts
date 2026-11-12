@@ -23,7 +23,8 @@ interface MediaEmbed {
 interface QuotedRecord {
   $type: string
   uri?: string
-  author?: { handle: string; displayName?: string }
+  author?: { did?: string; handle: string; displayName?: string; labels?: { src: string; val: string }[] }
+  labels?: { src: string; val: string }[]
   value?: { text?: string; createdAt?: string }
   embeds?: (MediaEmbed & { media?: MediaEmbed })[]
   indexedAt?: string
@@ -130,7 +131,10 @@ export function quotedPost(p: Shareable): Quote | undefined {
   const shared: Shareable = { record: { text: r.value?.text ?? '' }, embed: inner }
   const card = inner?.external ?? inner?.media?.external
   const created = Date.parse(r.value?.createdAt ?? r.indexedAt ?? '')
+  const labels = [...(r.labels ?? []), ...(r.author.labels ?? [])].map(({ src, val }) => ({ src, val }))
   return {
+    ...(labels.length ? { labels } : {}),
+    ...(r.author.did ? { authorDid: r.author.did } : {}),
     key: bskyKeyOf(r.uri),
     author: r.author.handle,
     name: r.author.displayName || undefined,

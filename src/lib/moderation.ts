@@ -1,4 +1,4 @@
-import type { Comment, Story } from './types'
+import type { Comment, Quote, Story } from './types'
 
 // Moderation for the open network. Bluesky posts carry labels from labelers: Bluesky's own
 // moderation service, any third-party labelers you subscribe to, and authors' own ("this is
@@ -85,9 +85,26 @@ export const acceptLabelers = (labelers: Labeler[]) => [`${BSKY_MODERATION};reda
 const lower = (words: string[]) => words.map((w) => w.trim().toLowerCase()).filter(Boolean)
 const plain = (html: string) => html.replace(/<[^>]+>/g, ' ').toLowerCase()
 
+/**
+ * A story's verdict, the post it quotes included. A quoted post is judged on its own labels: hidden,
+ * it shows as one that can't be shown (as on Bluesky); behind a warning, the story is covered, since
+ * a list row and the reader both show the quote's pictures.
+ */
+export function judgeStory(s: Pick<Story, 'labels' | 'authorDid' | 'quote'>, labelers: Labeler[]): Verdict & { quoteHidden?: boolean } {
+  const own = judge(s.labels, s.authorDid, labelers)
+  const q = s.quote?.gone ? {} : judge(s.quote?.labels, s.quote?.authorDid, labelers)
+  if (q.hide) return { ...own, quoteHidden: true }
+  if (!q.warning) return own
+  if (!own.warning) return q
+  return { ...own, warning: [...new Set([...own.warning.split(', '), ...q.warning.split(', ')])].join(', '), mediaOnly: own.mediaOnly && q.mediaOnly }
+}
+
+export const HIDDEN_QUOTE: Quote = { author: '', html: '', gone: true }
+
 /** A story with its verdict applied: undefined when it shouldn't show at all. */
-export function moderateStory<T extends Story>(s: T, labelers: Labeler[], mode: WarningMode): T | undefined {
-  const v = judge(s.labels, s.authorDid, labelers)
+export function moderateStory<T extends Story>(story: T, labelers: Labeler[], mode: WarningMode): T | undefined {
+  const v = judgeStory(story, labelers)
+  const s: T = v.quoteHidden ? { ...story, quote: HIDDEN_QUOTE } : story
   const warning = v.warning ?? s.warning
   if (v.hide || (warning && mode === 'hide')) return undefined
   return warning ? { ...s, warning, warnMediaOnly: v.warning ? v.mediaOnly : s.warnMediaOnly } : s
@@ -101,12 +118,12 @@ export function moderateComments(comments: Comment[], mutedWords: string[], labe
   const muted = lower(mutedWords)
   const walk = (cs: Comment[]): Comment[] =>
     cs.map((c) => {
-      const v = judge(c.labels, c.authorDid, labelers)
+      const v = judgeStory(c, labelers)
       const text = plain(c.html)
       const word = muted.find((w) => text.includes(w))
       const fold =
         (v.hide ? `Hidden: ${v.warning}` : word ? 'Contains a word you muted' : v.warning ? `Content warning: ${v.warning}` : c.warning) ?? (spoilers?.has(c.id) ? 'Possible spoiler' : undefined)
-      return { ...c, folded: fold, children: walk(c.children) }
+      return { ...c, ...(v.quoteHidden ? { quote: HIDDEN_QUOTE } : {}), folded: fold, children: walk(c.children) }
     })
   return walk(comments)
 }

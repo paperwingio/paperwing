@@ -134,6 +134,41 @@ export const BlueskyPost: Story = {
   },
 }
 
+const BSKY_MOD = 'did:plc:ar7c4by46qjdydhdevvrndac'
+const quoting = (labels: { src: string; val: string }[]) =>
+  seed(
+    story({
+      key: 'bs-quoting',
+      source: 'bluesky',
+      sourceLabel: 'Bluesky',
+      title: 'Look at this',
+      url: null,
+      discussionUrl: 'https://bsky.app/profile/a.example/post/2',
+      text: '<p>Look at this</p>',
+      quote: { author: 'b.example', html: '<p>The quoted words</p>', media: [{ kind: 'image', thumb: '/icon-512.png', alt: 'The quoted picture' }], labels },
+    }),
+  )
+
+/** A quoted post is judged on its own labels: flagged, it's covered even though the post quoting it isn't. */
+export const QuoteBehindAWarning: Story = {
+  args: { itemKey: 'bs-quoting' },
+  parameters: { app: { route: at('bs-quoting'), prefs: { warnings: 'blur' }, queries: quoting([{ src: BSKY_MOD, val: 'graphic-media' }]) } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Content warning: Graphic media')).toBeVisible()
+    await expect(canvas.queryByRole('img', { name: 'The quoted picture' })).toBeNull()
+  },
+}
+
+/** A quoted post its labels hide shows as unavailable. */
+export const HiddenQuote: Story = {
+  args: { itemKey: 'bs-quoting' },
+  parameters: { app: { route: at('bs-quoting'), queries: quoting([{ src: BSKY_MOD, val: 'porn' }]) } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('The quoted post is unavailable.')).toBeVisible()
+    await expect(canvas.queryByText('The quoted words')).toBeNull()
+  },
+}
+
 /** Back for a second visit: replies since are marked New. */
 export const NewSinceLastVisit: Story = {
   parameters: { app: { queries: seed(hn), route: at(hn.key), activity: { visits: { [hn.key]: NOW - 45 * 60_000 } } } },

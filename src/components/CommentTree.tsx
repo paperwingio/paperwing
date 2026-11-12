@@ -130,12 +130,12 @@ const CommentNode = memo(function CommentNode({ c, depth }: { c: Comment; depth:
                   <MediaGallery media={c.media} href={c.url} compact />
                 </div>
               )}
+              {c.quote && (
+                <div className="mb-2 mt-2">
+                  <QuoteCard quote={c.quote} />
+                </div>
+              )}
             </Covered>
-            {c.quote && (
-              <div className="mb-2 mt-2">
-                <QuoteCard quote={c.quote} />
-              </div>
-            )}
             {act && (act.canReply(c) || act.canVote(c)) && <CommentActs c={c} act={act} />}
             {c.more ? (
               <a

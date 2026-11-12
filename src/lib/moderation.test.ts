@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { coverageQuery, sameEvent } from './coverage'
-import { BSKY_MODERATION, judge, labelerFrom, moderateComments, moderateStory, withSetting } from './moderation'
+import { BSKY_MODERATION, judge, judgeStory, labelerFrom, moderateComments, moderateStory, withSetting } from './moderation'
 import type { Story } from './types'
 
 const story = (over: Partial<Story> = {}): Story => ({
@@ -47,6 +47,25 @@ describe('labels', () => {
     expect(moderateStory(story({ warning: 'US politics' }), [], 'blur')?.warning).toBe('US politics')
     expect(moderateStory(story({ labels: [{ src: BSKY_MODERATION, val: '!hide' }] }), [], 'show')).toBeUndefined()
   })
+  it('judge a quoted post on its own labels', () => {
+    const quote = { author: 'b.example', html: '<p>Look</p>', media: [{ kind: 'image' as const, thumb: 'https://cdn.example/a.jpg' }] }
+    // Behind a warning: the row is covered, pictures only when only pictures were flagged.
+    const warned = moderateStory(story({ quote: { ...quote, labels: [{ src: BSKY_MODERATION, val: 'graphic-media' }] } }), [], 'blur')
+    expect(warned).toMatchObject({ warning: 'Graphic media', warnMediaOnly: true })
+    expect(moderateStory(story({ quote: { ...quote, labels: [{ src: BSKY_MODERATION, val: 'graphic-media' }] } }), [], 'hide')).toBeUndefined()
+    // Both warned: both named, and the words stay covered when either's are.
+    const both = moderateStory(story({ labels: [{ src: BSKY_MODERATION, val: 'rude' }], quote: { ...quote, labels: [{ src: BSKY_MODERATION, val: 'nudity' }] } }), [], 'blur')
+    expect(both).toMatchObject({ warning: 'Rude, Nudity', warnMediaOnly: false })
+    // Hidden: the post still shows, its quote as one that can't be shown (as Bluesky does).
+    const hidden = moderateStory(story({ quote: { ...quote, labels: [{ src: BSKY_MODERATION, val: 'porn' }] } }), [], 'show')
+    expect(hidden?.quote).toEqual({ author: '', html: '', gone: true })
+    expect(hidden?.warning).toBeUndefined()
+    // An author's own label counts on their own quoted post.
+    expect(moderateStory(story({ quote: { ...quote, authorDid: 'did:plc:b', labels: [{ src: 'did:plc:b', val: 'nudity' }] } }), [], 'blur')?.warning).toBe('Nudity')
+    expect(moderateStory(story({ quote }), [], 'blur')).toEqual(story({ quote }))
+    // The same label on both is named once.
+    expect(judgeStory(story({ labels: [{ src: BSKY_MODERATION, val: 'nudity' }], quote: { ...quote, labels: [{ src: BSKY_MODERATION, val: 'nudity' }] } }), []).warning).toBe('Nudity')
+  })
   it('fold comments with muted words or labels, keeping their replies', () => {
     const [c] = moderateComments(
       [{ id: '1', author: 'a', html: '<p>The Election is rigged</p>', createdAt: 0, children: [{ id: '2', author: 'b', html: '<p>No it isn’t</p>', createdAt: 0, children: [] }] }],
@@ -55,6 +74,14 @@ describe('labels', () => {
     )
     expect(c.folded).toBe('Contains a word you muted')
     expect(c.children[0].folded).toBeUndefined()
+  })
+  it('judge the post a reply quotes on its own labels', () => {
+    const reply = (val: string) => ({ id: '1', author: 'a', html: '<p>Look</p>', createdAt: 0, children: [], quote: { author: 'b', html: '<p>Quoted</p>', labels: [{ src: BSKY_MODERATION, val }] } })
+    const [warned] = moderateComments([reply('graphic-media')], [], [])
+    expect(warned.folded).toBe('Content warning: Graphic media')
+    const [hidden] = moderateComments([reply('porn')], [], [])
+    expect(hidden.quote).toEqual({ author: '', html: '', gone: true })
+    expect(hidden.folded).toBeUndefined()
   })
   it('folds likely spoilers, after anything you chose to fold', () => {
     const tree = [

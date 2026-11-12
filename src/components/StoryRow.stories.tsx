@@ -79,6 +79,23 @@ export const BehindAWarning: Story = {
   parameters: { app: { prefs: { warnings: 'blur' } } },
 }
 
+const quoting = { source: 'bluesky', sourceLabel: 'Bluesky', quote: { author: 'quoted.example', html: '<p>The words being quoted</p>' } } as const
+/** Words behind a warning cover the post it quotes too, whatever the topic; a pictures-only warning leaves them. */
+export const QuoteBehindAWarning: Story = {
+  args: { story: ranked({ ...quoting, warning: 'Rude' }) },
+  parameters: { app: { prefs: { warnings: 'blur' } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(/The words being quoted/)).toBeNull()
+  },
+}
+export const QuoteBehindAPictureWarning: Story = {
+  args: { story: ranked({ ...quoting, warning: 'Nudity', warnMediaOnly: true }) },
+  parameters: { app: { prefs: { warnings: 'blur' } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/The words being quoted/)).toBeVisible()
+  },
+}
+
 export const Selected: Story = { args: { selected: true } }
 /** A hot discussion on the selected row: its red count sits on grey, and the accessibility check holds it to 4.5:1. */
 export const SelectedAndHot: Story = { args: { selected: true, story: ranked({ comments: 219, heat: 0.9 }) } }
