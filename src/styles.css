@@ -1393,6 +1393,12 @@
     color: var(--read);
     font-weight: 400;
   }
+  .row-title.row-post {
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 450;
+    white-space: pre-line;
+  }
   .row.downvoted .row-body {
     opacity: 0.6;
   }

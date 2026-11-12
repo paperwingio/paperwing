@@ -10,6 +10,17 @@ const reader = testReader
 const kinds = (r: Reader, id: string, opts = {}) => planChannel(r, id, { sort: 'hot', blueskyEnabled: true, ...opts })!.feeds.map((f) => f.ref)
 
 describe('planning For you', () => {
+  it('offers humour as a channel and adds its sources to For you only when followed', () => {
+    const humour = kinds(reader(), 'humour')
+    expect(humour).toContainEqual(expect.objectContaining({ kind: 'lemmy', community: 'memes@lemmy.world' }))
+    expect(humour).toContainEqual(expect.objectContaining({ kind: 'lemmy', community: 'programmer_humor@programming.dev' }))
+    expect(humour).toContainEqual(expect.objectContaining({ kind: 'bskyFeed', name: 'LMAO (Comedy/Humor)' }))
+    const followed = kinds(reader({ followed: ['humour'] }), 'for-you')
+    expect(followed).toContainEqual(expect.objectContaining({ kind: 'lemmy', community: 'memes@lemmy.world' }))
+    expect(followed).toContainEqual(expect.objectContaining({ kind: 'bskyFeed', name: 'LMAO (Comedy/Humor)' }))
+    expect(kinds(reader({ followed: ['science'] }), 'for-you')).not.toContainEqual(expect.objectContaining({ kind: 'bskyFeed', name: 'LMAO (Comedy/Humor)' }))
+  })
+
   it('reads the Mastodon home timeline, kept to your topics, once you sign in', () => {
     const r = reader({ followed: ['observability', 'ai'] })
     expect(kinds(r, 'for-you').filter((f) => f.kind === 'mastodon')).toEqual([])
@@ -149,6 +160,20 @@ describe('feed ids', () => {
 
 describe('ranking a channel', () => {
   const plan = (r: Reader) => planChannel(r, 'for-you', { sort: 'hot', blueskyEnabled: false })!
+
+  it('recognises jokes by their curated feed, without requiring humour keywords', () => {
+    const r = reader({ followed: ['humour'] })
+    const p = planChannel(r, 'for-you', { sort: 'hot', blueskyEnabled: true })!
+    const joke = story({ key: 'bs-joke', source: 'bluesky', sourceLabel: 'Bluesky', title: 'Those mice hated Cinderella', url: null })
+    const rows = rankChannel(
+      p,
+      r,
+      p.feeds.map((f) => (f.ref.kind === 'bskyFeed' ? [joke] : [])),
+    )
+    expect(rows[0].topics).toContain('humour')
+    expect(joke).not.toHaveProperty('topics')
+    expect(rankStories(r, [[joke]], { sort: 'hot' })[0].topics).not.toContain('humour')
+  })
 
   it('keeps what you muted, hid or your labelers hide out of the list', () => {
     const r = reader({

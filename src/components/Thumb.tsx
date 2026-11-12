@@ -6,7 +6,7 @@ import { feedUrl } from '../lib/sources/http'
 // Sources whose preview images are text cards (paper titles, repo names), unreadable at this size.
 const NO_LOOKUP = new Set(['arxiv', 'hf', 'github', 'release'])
 const NO_LOOKUP_HOSTS = /(^|\.)(github\.com|arxiv\.org|bsky\.app)$/
-const saveData = typeof navigator !== 'undefined' && !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
+export const saveData = typeof navigator !== 'undefined' && !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
 
 // Links that turned out to have no picture. A row keeps a slot for its picture while it loads; when
 // there's none, the slot goes and the row gets shorter, moving everything below it. Remembering them

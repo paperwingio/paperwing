@@ -4,7 +4,7 @@ import { Pip } from '../components/Pip'
 // The terms of using PaperWing, in plain words. Like the privacy page, written to match what the app
 // actually does: if a promise here changes in the code, it changes here too.
 
-const UPDATED = '4 November 2026'
+const UPDATED = '11 November 2026'
 
 function Part({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -55,8 +55,8 @@ export function TermsPage() {
             hiring are read from the employer’s own job board a few times a day and may be out of date. PaperWing isn’t a jobs service: applications go to the employer, through its board.
           </p>
           <p>
-            Stories, articles, posts and comments belong to the people and publishers who made them. PaperWing shows headlines, short excerpts and links, and the reader view and saved stories fetch an
-            article for your own reading, the way your browser would. Follow the link to the original to support the people who wrote it.
+            Stories, articles, posts and comments belong to the people and publishers who made them. PaperWing shows headlines, excerpts, public posts, pictures and links, and the reader view and
+            saved stories fetch an article for your own reading, the way your browser would. Follow the link to the original to support the people who wrote it.
           </p>
           <p>
             If you own something shown here and want it removed, ask{' '}

@@ -138,6 +138,22 @@ describe('quote posts', () => {
       embed: { $type: 'app.bsky.embed.recordWithMedia#view', record: { $type: 'app.bsky.embed.record#view', record: viewRecord }, media: { $type: 'app.bsky.embed.images#view', images: [] } },
     })
     expect(withMedia?.author).toBe('b.bsky.social')
+    // Its own labels and its author's travel with it, so moderation can judge the quote apart from the post quoting it.
+    const labelled = quotedPost({
+      record: { text: '' },
+      embed: {
+        $type: 'app.bsky.embed.record#view',
+        record: { ...viewRecord, labels: [{ src: 'did:plc:mod', val: 'porn' }], author: { ...viewRecord.author, did: 'did:plc:abc', labels: [{ src: 'did:plc:mod', val: 'spam' }] } },
+      },
+    })
+    expect(labelled).toMatchObject({
+      authorDid: 'did:plc:abc',
+      labels: [
+        { src: 'did:plc:mod', val: 'porn' },
+        { src: 'did:plc:mod', val: 'spam' },
+      ],
+    })
+    expect(q?.labels).toBeUndefined()
     expect(quotedPost({ record: { text: '' }, embed: { $type: 'app.bsky.embed.record#view', record: { $type: 'app.bsky.embed.record#viewNotFound' } } })).toEqual({ author: '', html: '', gone: true })
     // A quoted feed or list isn't a post.
     expect(quotedPost({ record: { text: '' }, embed: { $type: 'app.bsky.embed.record#view', record: { $type: 'app.bsky.feed.defs#generatorView' } } })).toBeUndefined()

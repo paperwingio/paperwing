@@ -27,6 +27,9 @@ export interface Quote {
   link?: { url: string; title?: string }
   /** Deleted, blocked or withdrawn by its author: there, but not shown. */
   gone?: boolean
+  /** Its own moderation labels and its author's (Bluesky), judged apart from the post quoting it. */
+  labels?: { src: string; val: string }[]
+  authorDid?: string
 }
 
 export interface Story {

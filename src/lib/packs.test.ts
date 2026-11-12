@@ -7,6 +7,17 @@ import type { Story } from './types'
 const base = { followed: [] as string[], interests: [], customFeeds: [] }
 const story = (title: string): Story => ({ key: 'x', source: 'rss', sourceLabel: 'Somewhere', title, url: null, discussionUrl: null, createdAt: 0, hasThread: false })
 
+describe('humour readers', () => {
+  it.each(['memes', 'humor', 'shitposting', 'comedy', 'programming humour'])('finds the humour topic by %s', (query) => {
+    expect(searchTopics(query)[0]?.topic.id).toBe('humour')
+  })
+
+  it('tags jokes from dedicated communities, without tagging news about memes', () => {
+    expect(topicsForStory({ ...story('Works on my machine'), source: 'lemmy', sourceLabel: 'c/programmer_humor' })).toContain('humour')
+    expect(topicsForStory(story('How memes and humour shape political campaigns'))).not.toContain('humour')
+  })
+})
+
 describe('sports readers', () => {
   it.each([
     ['climbing', 'Bouldering footwork for your first climbing gym session'],

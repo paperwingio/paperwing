@@ -23,8 +23,8 @@ import { rowOutlets } from '../lib/coverage'
 import type { Story } from '../lib/types'
 import { toast } from '../lib/ui'
 import { scoreUnit, SOURCE_NAMES, sourceLabel } from './Source'
-import { mediaLabel } from './Media'
-import { Thumb, thumbFor } from './Thumb'
+import { MediaGallery, mediaLabel } from './Media'
+import { saveData, Thumb, thumbFor } from './Thumb'
 import { StoryIcon } from './SourceIcon'
 import { TopicTag } from './TopicTag'
 import { SpiceMark } from './Spice'
@@ -60,15 +60,27 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const pending = useLibrary((l) => !!l.pending[s.key])
   const domain = domainOf(s.url)
   const topics = s.topics.filter((t) => t !== hideTopic).slice(0, 2)
+  const humour = s.topics.includes('humour')
   const plain = showExcerpts && s.text && EXCERPT_SOURCES.has(s.source) ? plainText(s.text) : undefined
+  const words =
+    humour && !s.url && showExcerpts && s.text && !(cover && !s.warnMediaOnly)
+      ? s.text
+          .split(/<br\s*\/?>|<\/p>/gi)
+          .map(plainText)
+          .filter(Boolean)
+          .join('\n')
+      : undefined
+  const fullPost = words && words.length <= 600 ? words : undefined
   // A text-only post's title is its own first line; repeating it as an excerpt adds nothing.
-  const excerpt = plain && !plain.startsWith(s.title.replace(/…$/, '').slice(0, 40)) ? plain : undefined
+  const repeated = plain?.startsWith(s.title.replace(/…$/, '').slice(0, 40))
+  const excerpt = !repeated ? (fullPost ?? plain) : undefined
   const rowRef = useRef<HTMLElement>(null)
   useImpression(rowRef, s, !read)
   const vote = useActivity((a) => a.votes[s.key])
   const swipeRef = useSwipeActions<HTMLDivElement>({ right: swipe?.right?.[1] ?? (() => void toggleSaved(s)), left: swipe?.left?.[1] ?? (() => hideStory(s.key, s)) })
   const comments = s.comments ?? 0
-  const thumb = thumbnails ? thumbFor(s) : undefined
+  const inlineMedia = humour && thumbnails && !saveData && !cover ? s.media : undefined
+  const thumb = thumbnails && !inlineMedia?.length ? thumbFor(s) : undefined
   const also = [...new Set(s.alsoOn.map(sourceLabel))]
   // Other outlets' takes on the same event: what the feed grouped, plus a news search already run for it.
   const qc = useQueryClient()
@@ -141,7 +153,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
                 <EyeOff size={13} /> {s.warning}
               </p>
             )}
-            <Heading level={level} className="row-title">
+            <Heading level={level} className={`row-title${fullPost && repeated ? ' row-post' : ''}`}>
               <a
                 href={s.url ?? s.discussionUrl ?? '#'}
                 target="_blank"
@@ -157,14 +169,30 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
                   onOpen(s.key, openingTab(s))
                 }}
               >
-                {s.title}
+                {fullPost && repeated ? fullPost : s.title}
               </a>
             </Heading>
-            {excerpt && !(cover && !s.warnMediaOnly) && <p className="mt-1 line-clamp-2 text-[0.875rem] leading-snug text-ink-2">{excerpt}</p>}
-            {s.quote && !s.quote.gone && showExcerpts && (
-              <p className="row-quote mt-1 line-clamp-2 text-[0.8125rem] leading-snug text-ink-3">
-                Quoting <span className="font-semibold text-ink-2">@{s.quote.author}</span>: {plainText(s.quote.html)}
-              </p>
+            {excerpt && !(cover && !s.warnMediaOnly) && <p className={`mt-1 text-[0.875rem] leading-snug text-ink-2 ${fullPost ? 'whitespace-pre-line' : 'line-clamp-2'}`}>{excerpt}</p>}
+            {!!inlineMedia?.length && (
+              <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                {inlineMedia.map((m, i) => (
+                  <MediaGallery key={i} media={[m]} href={s.discussionUrl} />
+                ))}
+              </div>
+            )}
+            {s.quote && !s.quote.gone && showExcerpts && !(cover && !s.warnMediaOnly) && (
+              <div className="row-quote mt-1 text-[0.8125rem] leading-snug text-ink-3">
+                <p className={humour ? undefined : 'line-clamp-2'}>
+                  Quoting <span className="font-semibold text-ink-2">@{s.quote.author}</span>: {plainText(s.quote.html)}
+                </p>
+                {humour && thumbnails && !saveData && !cover && s.quote.media && (
+                  <div className="mt-2 space-y-3" onClick={(e) => e.stopPropagation()}>
+                    {s.quote.media.map((m, i) => (
+                      <MediaGallery key={i} media={[m]} href={s.quote?.url} />
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
             <FriendsLine story={s} className="mt-1.5" />
             {why && <WhyLine story={s} />}

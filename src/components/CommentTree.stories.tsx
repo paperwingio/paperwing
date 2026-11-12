@@ -64,6 +64,19 @@ export const Bluesky: Story = {
   },
 }
 
+/** A folded reply covers the post it quotes too, until Show. */
+export const FoldedReplyWithAQuote: Story = {
+  args: {
+    sourceName: 'Bluesky',
+    comments: [comment({ author: 'a.example', html: '<p>Look</p>', folded: 'Content warning: Graphic media', quote: { author: 'b.example', html: '<p>The quoted words</p>' } })],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText('The quoted words')).toBeNull()
+    await userEvent.click(canvas.getByRole('button', { name: 'Show' }))
+    await expect(canvas.getByText('The quoted words')).toBeVisible()
+  },
+}
+
 export const CollapseAThread: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/This is exactly it/)).toBeVisible()

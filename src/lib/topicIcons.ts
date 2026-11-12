@@ -103,6 +103,7 @@ const ICONS: Record<string, LucideIcon> = {
   music: Music,
   books: BookOpen,
   gaming: Gamepad2,
+  humour: MessagesSquare,
   sport: Trophy,
   football: Volleyball,
   motorsport: Flag,

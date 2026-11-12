@@ -105,12 +105,12 @@ const unscored = (s: Pick<Story, 'source' | 'score'>) => !REFERENCE[s.source]?.[
 const SOCIAL = new Set<SourceKind>(['bluesky', 'mastodon'])
 
 /** Engagement in HN-equivalent points: score weighted 0.7 and comments 0.3, or 0.4 and 0.6 on social networks. */
-export function engagement(s: Pick<Story, 'source' | 'score' | 'comments' | 'weight'>): number {
+export function engagement(s: Pick<Story, 'source' | 'score' | 'comments' | 'weight'>, humour = false): number {
   if (s.weight !== undefined) return Math.min(CAP, s.weight)
   const [refScore, refComments] = REFERENCE[s.source] ?? [0, 0]
   if (!refScore || s.score === undefined) return UNSCORED
   const score = s.score / refScore
-  if (!refComments || s.comments === undefined) return Math.min(CAP, 100 * score)
+  if (humour || !refComments || s.comments === undefined) return Math.min(CAP, 100 * score)
   const w = SOCIAL.has(s.source) ? 0.4 : 0.7
   return Math.min(CAP, 100 * (w * score + (1 - w) * (s.comments / refComments)))
 }
@@ -192,6 +192,8 @@ function plain(r: Ranked): Story {
 }
 
 export function merge(batches: Story[][], opts: MergeOptions): Ranked[] {
+  const humour = new Set<string>()
+  for (const batch of batches) for (const s of batch) if (topicsForStory(s, opts.extraTopics).includes('humour')) humour.add(s.key)
   const byLink = new Map<string, Ranked>()
   const byKey = new Map<string, Ranked>()
   let order: Ranked[] = []
@@ -202,11 +204,14 @@ export function merge(batches: Story[][], opts: MergeOptions): Ranked[] {
   for (const batch of batches) {
     for (const s of batch) {
       if (byKey.has(s.key) || isMuted(s, opts.filters)) continue
-      const e = engagement(s)
+      const topics = topicsForStory(s, opts.extraTopics)
+      if (humour.has(s.key) && !topics.includes('humour')) topics.push('humour')
+      const e = engagement(s, topics.includes('humour'))
       const heat = e / (e + 60)
       const link = s.url ? canonicalUrl(s.url) : undefined
       const existing = link ? byLink.get(link) : undefined
       if (existing) {
+        if (topics.includes('humour') && !existing.topics.includes('humour')) existing.topics.push('humour')
         // Who shared it, and what they said, stays with the row whichever copy leads it.
         const sharedBy = [...new Set([...(existing.sharedBy ?? []), ...(s.sharedBy ?? [])])]
         const shareNote = existing.shareNote ?? s.shareNote
@@ -234,7 +239,7 @@ export function merge(batches: Story[][], opts: MergeOptions): Ranked[] {
         byKey.set(s.key, existing)
         continue
       }
-      const r: Ranked = { ...s, heat, alsoOn: [], topics: topicsForStory(s, opts.extraTopics) }
+      const r: Ranked = { ...s, heat, alsoOn: [], topics }
       byKey.set(s.key, r)
       engagementOf.set(r, e)
       leadOf.set(r, e)
@@ -295,7 +300,7 @@ export function merge(batches: Story[][], opts: MergeOptions): Ranked[] {
     const fight = flamewar(r)
     const taste = affinityFactor(r, opts.affinity) * (opts.votes?.[r.key] ? VOTED[opts.votes[r.key]] : 1)
     // Someone you chose to follow said it: worth more than a stranger's post with the same numbers.
-    const voice = r.followed ? FOLLOWED : mixed && SOCIAL.has(r.source) && kindOf(r) === 'discussions' ? COMMENTARY : 1
+    const voice = r.followed ? FOLLOWED : mixed && SOCIAL.has(r.source) && !r.topics.includes('humour') && kindOf(r) === 'discussions' ? COMMENTARY : 1
     // A suggestion from a board you haven't joined seasons the list; it doesn't take it over.
     const suggested = r.recommended ? SUGGESTED : 1
     // HN-style gravity on engagement, damped so a big story doesn't swamp everything fresh.

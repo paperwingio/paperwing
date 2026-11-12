@@ -17,6 +17,36 @@ const s = (key: string, url: string | null, score: number, extra: Partial<Story>
   ...extra,
 })
 
+describe('humour ranking', () => {
+  it('lets a well-liked joke with no replies compete with news, while keeping the commentary penalty elsewhere', () => {
+    const post = s('bs-joke', null, 150, { source: 'bluesky', sourceLabel: 'LMAO (Comedy/Humor)', title: 'Works on my machine' })
+    const news = s('hn-news', 'https://example.com/news', 100)
+    expect(merge([[news], [post]], { sort: 'hot', filters }).map((r) => r.key)).toEqual(['bs-joke', 'hn-news'])
+    expect(merge([[news], [{ ...post, sourceLabel: 'Bluesky' }]], { sort: 'hot', filters }).map((r) => r.key)).toEqual(['hn-news', 'bs-joke'])
+  })
+
+  it('keeps curated humour provenance whichever feed answers first', () => {
+    const post = s('bs-duplicate', null, 150, { source: 'bluesky', sourceLabel: 'Bluesky', title: 'Works on my machine' })
+    const curated = { ...post, sourceLabel: 'LMAO (Comedy/Humor)' }
+    const news = s('hn-news', 'https://example.com/news', 100)
+    for (const batches of [
+      [[post], [curated]],
+      [[curated], [post]],
+    ]) {
+      const rows = merge([[news], ...batches], { sort: 'hot', filters })
+      expect(rows.map((r) => r.key)).toEqual(['bs-duplicate', 'hn-news'])
+      expect(rows[0].topics).toContain('humour')
+    }
+  })
+
+  it('keeps curated humour provenance when another source found the same link first', () => {
+    const post = s('bs-plain', 'https://example.com/meme', 150, { source: 'bluesky', sourceLabel: 'Bluesky', title: 'Works on my machine' })
+    const curated = { ...post, key: 'bs-curated', url: 'https://example.com/meme?utm_source=feed', sourceLabel: 'LMAO (Comedy/Humor)' }
+    const [row] = merge([[post], [curated]], { sort: 'hot', filters })
+    expect(row.topics).toContain('humour')
+  })
+})
+
 describe('canonicalUrl', () => {
   it('strips tracking params, www and trailing slashes', () => {
     expect(canonicalUrl('https://www.example.com/post/?utm_source=x&id=2')).toBe('example.com/post?id=2')

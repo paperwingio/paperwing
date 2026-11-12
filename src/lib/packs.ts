@@ -16,6 +16,22 @@ const LW = 'lemmy.world'
 
 export const GENERAL_TOPICS: Topic[] = [
   ...INTEREST_TOPICS,
+  {
+    id: 'humour',
+    label: 'Memes & humour',
+    hue: 45,
+    cluster: 'culture',
+    blurb: 'Memes, shitposts, comics and jokes from people being funny on the open web',
+    aliases: ['humor', 'shitposting', 'comedy', 'funny', 'comics', 'programming humour', 'programming humor'],
+    terms: [],
+    related: ['programming', 'gaming', 'film-tv'],
+    feeds: [{ kind: 'bskyFeed', uri: 'at://did:plc:h34txfcpwsnswikajv7tos6w/app.bsky.feed.generator/aaachysnvmkze', name: 'LMAO (Comedy/Humor)' }],
+    lemmy: [
+      { community: 'memes@lemmy.world', via: LW },
+      { community: 'programmer_humor@programming.dev', via: LW },
+      { community: 'comicstrips@lemmy.world', via: LW },
+    ],
+  },
   /* ------------------------------------------------------------------ news */
   {
     id: 'world-news',
