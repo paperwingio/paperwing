@@ -1,8 +1,8 @@
 # The lighter side: more than a news reader
 
 A proposal for opt-in, non-serious reading: questions, conversation, cute animals, odd and interesting
-things, pictures and video, alongside the Memes & humour topic on `feat/memes-and-humour`. Nothing
-here is built yet. Sources were checked on 12 November 2026; numbers are a snapshot, not a promise.
+things, pictures and video, alongside Memes & humour. Sources were checked on 12 November 2026;
+numbers are a snapshot, not a promise. [What was built](#6-what-was-built) records how it turned out.
 
 It has to keep the principles. Every topic here is followed in Explore, never pushed. None of it
 joins Today or For you unless the reader follows it. Lists still end, and nothing is tuned for time
@@ -136,16 +136,16 @@ Ordered by value for cost.
 5. **Alt text first.** Pictures without a description get a quiet "No description" mark. The
    description shows under the picture on a tap. Picture topics could rank described pictures
    slightly higher.
-6. **Picture posts to boards.** Today, listing is links only. Posting a picture with required alt
-   text to a community board (a Bluesky blob) or a Lemmy community makes boards work like an image
-   board, and the post stays in the reader's account. This needs compose work.
-7. **Weekly best-of.** Top of the week for lighter-side channels as a fixed, edition-style list on
-   Sundays, with an end. It reuses the Top sort and the edition snapshot.
+6. **Picture posts to boards.** Already there: Write a post (`WritePost.tsx`) takes up to four
+   pictures, can require descriptions (`requireAlt`), and lists them on a board from the reader's
+   own Bluesky account.
+7. **Weekly best-of.** Top on a lighter-side channel reads its communities' top of the week.
 8. **Merging reposted memes (spike first).** The same meme is uploaded separately to Lemmy, Bluesky
    and Mastodon, so "Also on" (matched by link) misses it. A perceptual hash of thumbnails could merge
    the copies and credit the earliest. The catch: reading pixels from another site's image needs that
-   host to send CORS headers (unchecked for pict-rs and Bluesky's CDN). If they don't, the server
-   would have to fetch the pictures, which cuts against principle 8.
+   host to send CORS headers. Checked on 12 November: Lemmy's pict-rs, Bluesky's CDN and Mastodon's
+   media hosts send none; only Pixelfed's CDN does. The server would have to fetch every picture,
+   which cuts against principle 8, so this isn't built.
 
 Rejected: a random button or endless scroll (against principle 2), karma, streaks or badges,
 anonymous posting (there are no PaperWing accounts, and boards live in Bluesky accounts), and hosting
@@ -153,13 +153,34 @@ uploads ourselves.
 
 ## 5. Suggested order
 
-1. Make humour a `casual` kind of topic, once `feat/memes-and-humour` merges (small refactor with tests).
-2. Eye bleach, Ask, Conversation and Oddly interesting from the sources checked above (topic data,
-   `packs.test.ts` cases).
-3. A PeerTube feed kind, with tests at the feed-kind interface and the privacy page updated.
-4. The Eye bleach ending and the picture grid (stories and e2e).
-5. Question rows.
-6. After spikes: Pixelfed beyond Mastodon tags, picture posts, repost merging.
+1. Make humour a `casual` kind of topic (small refactor with tests).
+2. The Lighter side topics from the sources checked above.
+3. A PeerTube feed kind.
+4. A Pixelfed feed kind through the server.
+5. Something nice and the picture grid.
+6. Question rows, picture descriptions and the weekly best-of.
+
+## 6. What was built
+
+One stacked pull request per step above:
+
+- **Casual topics.** `Topic.casual` replaces the `'humour'` checks in `rank.ts`, `StoryRow.tsx` and
+  `channelFeed.ts`. Curated Bluesky feed names apply to every topic.
+- **Lighter side.** A `lighter` cluster with Memes & humour, Shitposts, Eye bleach, Ask, Conversation,
+  Oddly interesting and Pictures. Shitposts got rougher after a first pass felt tame: lemmyshitpost
+  (9.4k active a week), greentext, 196, me_irl, egg_irl, hmmm, anarchychess, OverheardBsky and
+  `#shitpost`. Humour gained memes@sopuli.xyz, memes@lemmy.ml and funny@sh.itjust.works. Lemmy's
+  `nsfw` flag and Bluesky's labels still filter as everywhere else. `memes@lemmy.dbzer0.com` was left out:
+  every `c/memes` community shares one label, so it would have tagged all memes as shitposts.
+- **PeerTube.** A `peertube` feed kind (Sepia Search by category, or one server's trending), read from
+  the browser and loaded lazily, with `pt-` story keys and top-level comments as the discussion.
+- **Pixelfed.** A `pixelfed` feed kind through `api/feed.ts` (trending, or one hashtag), filtering
+  sensitive and non-public posts on the server. Comments need a sign-in, so posts are link stories.
+- **Something nice and the grid.** `SomethingNice` at the end of Today and after heavy news in the
+  reader. A lazily loaded `PictureGrid` for casual channels, with one remembered `pictureGrid` preference.
+- **Questions, descriptions, best-of.** `Topic.questions` (Ask) shows the whole question and an
+  Unanswered pill. `MediaGallery`'s `alts` shows an ALT button or "No description". Top on a casual
+  topic reads Lemmy's `TopWeek`.
 
 ## Scratch: Bluesky feed URIs (from `app.bsky.unspecced.getPopularFeedGenerators`)
 
