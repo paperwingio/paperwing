@@ -102,6 +102,8 @@ export interface Topic {
    * commentary, and rows show short posts and pictures in full.
    */
   casual?: boolean
+  /** Questions people asked: rows show the whole question, and say when nobody has answered yet. */
+  questions?: boolean
 }
 
 export const TOPICS: Topic[] = [...TECH_TOPICS, ...GENERAL_TOPICS]
@@ -110,6 +112,10 @@ export const TOPIC_BY_ID = new Map(TOPICS.map((t) => [t.id, t]))
 const CASUAL = new Set(TOPICS.filter((t) => t.casual).map((t) => t.id))
 /** Whether any of a story's topics is read for fun (see `Topic.casual`). */
 export const isCasual = (topics: readonly string[]) => topics.some((t) => CASUAL.has(t))
+
+const QUESTIONS = new Set(TOPICS.filter((t) => t.questions).map((t) => t.id))
+/** Whether a story is a question someone asked (see `Topic.questions`). */
+export const isQuestion = (topics: readonly string[]) => topics.some((t) => QUESTIONS.has(t))
 
 /** Curated Bluesky feeds by URI, with the name a topic gives them: their posts are labelled with it. */
 export const CURATED_FEEDS = new Map(TOPICS.flatMap((t) => t.feeds.flatMap((f) => (f.kind === 'bskyFeed' ? [[f.uri, f.name] as const] : []))))

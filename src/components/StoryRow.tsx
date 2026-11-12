@@ -16,7 +16,7 @@ import { stateOf, useLibrary } from '../lib/library'
 import { isWatching, useWatch } from '../lib/watch'
 import { domainKey, type Ranked } from '../lib/rank'
 import { useImpression } from '../lib/impressions'
-import { isCasual, topicsForStory } from '../lib/topics'
+import { isCasual, isQuestion, topicsForStory } from '../lib/topics'
 import { LESSON, useActivity, usePrefs } from '../lib/store'
 import { castVote, storyVote, useAccounts, useVoted } from '../lib/accounts'
 import { rowOutlets } from '../lib/coverage'
@@ -61,6 +61,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const domain = domainOf(s.url)
   const topics = s.topics.filter((t) => t !== hideTopic).slice(0, 2)
   const casual = isCasual(s.topics)
+  const question = isQuestion(s.topics)
   const plain = showExcerpts && s.text && EXCERPT_SOURCES.has(s.source) ? plainText(s.text) : undefined
   const words =
     casual && !s.url && showExcerpts && s.text && !(cover && !s.warnMediaOnly)
@@ -172,11 +173,13 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
                 {fullPost && repeated ? fullPost : s.title}
               </a>
             </Heading>
-            {excerpt && !(cover && !s.warnMediaOnly) && <p className={`mt-1 text-[0.875rem] leading-snug text-ink-2 ${fullPost ? 'whitespace-pre-line' : 'line-clamp-2'}`}>{excerpt}</p>}
+            {excerpt && !(cover && !s.warnMediaOnly) && (
+              <p className={`mt-1 text-[0.875rem] leading-snug text-ink-2 ${fullPost ? 'whitespace-pre-line' : question ? 'line-clamp-6' : 'line-clamp-2'}`}>{excerpt}</p>
+            )}
             {!!inlineMedia?.length && (
               <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
                 {inlineMedia.map((m, i) => (
-                  <MediaGallery key={i} media={[m]} href={s.discussionUrl} />
+                  <MediaGallery key={i} media={[m]} href={s.discussionUrl} alts />
                 ))}
               </div>
             )}
@@ -251,9 +254,14 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
         <div className="row-bar" onClick={(e) => e.stopPropagation()}>
           <Votes story={s} vote={vote} />
           {s.hasThread && (
-            <button className={`pill${comments > 0 && s.heat >= 0.85 ? ' hot' : ''}`} onClick={() => onOpen(s.key, 'discussion')} aria-label={`${comments} comments`} title="Open the discussion (c)">
+            <button
+              className={`pill${comments > 0 && s.heat >= 0.85 ? ' hot' : ''}`}
+              onClick={() => onOpen(s.key, 'discussion')}
+              aria-label={question && !comments ? 'Unanswered: open the question' : `${comments} comments`}
+              title="Open the discussion (c)"
+            >
               <MessageSquare size={15} aria-hidden />
-              <span className="num">{compact(comments)}</span>
+              {question && !comments ? <span>Unanswered</span> : <span className="num">{compact(comments)}</span>}
             </button>
           )}
           <SpiceMark places={[s, ...s.alsoOn]} />

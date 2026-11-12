@@ -91,6 +91,7 @@ export const GENERAL_TOPICS: Topic[] = [
   {
     id: 'ask',
     label: 'Ask',
+    questions: true,
     hue: 205,
     cluster: 'lighter',
     blurb: 'Questions people want answered, from the curious to the ones you were afraid to ask',

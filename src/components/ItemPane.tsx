@@ -362,7 +362,7 @@ export function ItemPane({ itemKey, onClose, onOpen }: Props) {
                       {story.media && (
                         <div className={story.text ? 'mt-4' : undefined}>
                           <Covered warning={cw ? `Content warning: ${cw}` : undefined}>
-                            <MediaGallery media={story.media} href={story.discussionUrl} />
+                            <MediaGallery media={story.media} href={story.discussionUrl} alts />
                           </Covered>
                         </div>
                       )}

@@ -108,6 +108,8 @@ export function planChannel(reader: Reader, channelId: string, opts: PlanOptions
   const feeds = channel.feeds
     .filter((f) => opts.blueskyEnabled || f.kind !== 'bluesky')
     .map((f) => (latest ? newestOf(f) : f))
+    // Top on a casual topic is the best of the week: its communities' week, not just what's fetched now.
+    .map((f) => (opts.sort === 'top' && channel.topic?.casual && f.kind === 'lemmy' ? { ...f, sort: 'TopWeek' as const } : f))
     .map((ref) => ({ ref, id: feedId(ref, reader), label: feedLabel(ref) }))
   return { channel, feeds, sort: opts.sort }
 }

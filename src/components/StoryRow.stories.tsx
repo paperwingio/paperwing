@@ -345,3 +345,23 @@ export const HumourBehindAWarning: Story = {
     await expect(canvas.queryByRole('heading', { name: /It was in the other terminal/ })).toBeNull()
   },
 }
+
+/** A question nobody has answered yet: the whole question, and the comments pill says so. */
+export const UnansweredQuestion: Story = {
+  args: {
+    story: ranked({
+      key: 'lm-9@lemmy.world',
+      source: 'lemmy',
+      sourceLabel: 'c/nostupidquestions',
+      title: 'Why do cats knock things off tables?',
+      url: null,
+      text: '<p>Mine does it while making eye contact. Is it a power move, or does she just like the noise?</p>',
+      comments: 0,
+      topics: ['ask'],
+    }),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Is it a power move/)).toBeVisible()
+    await expect(canvas.getByRole('button', { name: 'Unanswered: open the question' })).toBeVisible()
+  },
+}

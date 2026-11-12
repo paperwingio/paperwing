@@ -14,10 +14,12 @@ interface Props {
   href?: string | null
   /** Smaller, for replies. */
   compact?: boolean
+  /** Under a single picture, its description on a tap (or that it has none). */
+  alts?: boolean
 }
 
 /** One image keeps its shape; two to four sit in a cropped grid. Tapping opens the full-size image. */
-export function MediaGallery({ media, href, compact }: Props) {
+export function MediaGallery({ media, href, compact, alts }: Props) {
   const [selected, setSelected] = useState<{ images: Media[]; start: number } | null>(null)
   const max = compact ? 'max-h-64' : 'max-h-[32rem]'
   const video = media.find((m) => m.kind === 'video')
@@ -69,6 +71,7 @@ export function MediaGallery({ media, href, compact }: Props) {
             title={m.alt}
           />
         </a>
+        {alts && <AltNote alt={m.alt} />}
         {viewer}
       </>
     )
@@ -93,6 +96,28 @@ export function MediaGallery({ media, href, compact }: Props) {
         </a>
       ))}
       {viewer}
+    </div>
+  )
+}
+
+/** A picture's description on a tap, or a quiet note that it has none: memes often hide the joke in it. */
+function AltNote({ alt }: { alt?: string }) {
+  const [open, setOpen] = useState(false)
+  if (!alt?.trim()) return <p className="mt-1 text-[0.75rem] text-ink-3">No description</p>
+  return (
+    <div className="mt-1 text-[0.8125rem] leading-snug text-ink-2">
+      <button
+        type="button"
+        className="rounded-md border border-line px-1.5 text-[0.6875rem] font-bold tracking-wide text-ink-2 hover:text-ink"
+        aria-expanded={open}
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen(!open)
+        }}
+      >
+        ALT
+      </button>
+      {open && <p className="mt-1 whitespace-pre-line">{alt}</p>}
     </div>
   )
 }

@@ -51,7 +51,7 @@ export function NicePicture({ story, onAnother }: { story: Story; onAnother?: ()
   const images = (story.media ?? []).filter((m) => m.kind === 'image').slice(0, 1)
   return (
     <figure className="mx-auto max-w-md text-left">
-      <MediaGallery media={images} href={story.discussionUrl} compact />
+      <MediaGallery media={images} href={story.discussionUrl} compact alts />
       <figcaption className="mt-2 text-[0.875rem] text-ink-2">
         <span className="line-clamp-2 font-semibold">{story.title}</span>
         <span className="text-ink-3">

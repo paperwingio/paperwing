@@ -14,6 +14,24 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const OneImage: Story = {}
+/** A meme's description on a tap: the joke is often in it. */
+export const WithItsDescription: Story = {
+  args: { alts: true, media: [img('A cat in a box labelled "do not open", looking very pleased')] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('button', { name: 'ALT' }))
+    await expect(canvas.getByText(/looking very pleased/, { selector: 'p' })).toBeVisible()
+  },
+}
+
+/** A picture nobody described says so, quietly. */
+export const WithoutADescription: Story = {
+  args: { alts: true, media: [{ ...img(''), alt: undefined }] },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('No description')).toBeVisible()
+  },
+}
+
 export const TwoImages: Story = { args: { media: [img('First'), img('Second')] } }
 export const ThreeImages: Story = { args: { media: [img('First'), img('Second'), img('Third')] } }
 export const FourImages: Story = { args: { media: [img('First'), img('Second'), img('Third'), img('Fourth')] } }
