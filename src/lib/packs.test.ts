@@ -42,6 +42,8 @@ describe('lighter side readers', () => {
   it.each([
     ['c/aww', 'eye-bleach'],
     ['c/196', 'shitposts'],
+    ['c/lemmyshitpost', 'shitposts'],
+    ['c/greentext', 'shitposts'],
     ['c/asklemmy', 'ask'],
     ['c/showerthoughts', 'conversation'],
     ['c/mildlyinteresting', 'oddly-interesting'],
