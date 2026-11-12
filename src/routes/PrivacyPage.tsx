@@ -168,8 +168,8 @@ export function PrivacyPage() {
             Vercel (hosting), Upstash (the sync and cache database), Anthropic (summaries, with your key), and the networks you read and sign in to: Hacker News, Lobsters, Lemmy, Bluesky, Mastodon and
             the sites whose feeds you follow. Pixelfed (pixelfed.social), read by our server for the picture topics you follow or open, without anything about you. For the Layoffs topic, US state
             labour departments’ WARN pages, and employers’ job boards on Greenhouse, Ashby, Lever and Workday. Sepia Search (Framasoft’s index of PeerTube servers) and PeerTube servers, asked straight
-            from your browser for the topics with videos that you follow or open, and the videos you open. YouTube and Vimeo, only when you press play on one of their videos. Push notifications go
-            through your browser maker’s push service.
+            from your browser for the topics with videos that you follow or open, and the videos you open. YouTube and Vimeo, only when you press play on one of their videos. Tapping Something nice
+            reads Eye bleach’s sources, as opening that topic would. Push notifications go through your browser maker’s push service.
           </p>
         </Part>
 

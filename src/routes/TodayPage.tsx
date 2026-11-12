@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router'
 import { FeedFailed } from '../components/FeedState'
 import { OutageBanner } from '../components/OutageWatch'
 import { Pip } from '../components/Pip'
+import { SomethingNice } from '../components/SomethingNice'
 import { Split, useListKeys } from '../components/Split'
 import { usePretext, useTypesetIn } from '../lib/pretext'
 import { RowSkeleton, StoryRow } from '../components/StoryRow'
@@ -191,6 +192,7 @@ export function TodayPage() {
                   </button>
                 </>
               )}
+              <SomethingNice className="mt-5" />
             </div>
           )}
         </>

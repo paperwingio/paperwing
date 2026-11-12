@@ -75,6 +75,8 @@ export interface Prefs {
   /** Pip dresses for the season (season.ts). */
   seasonal: boolean
   hideRead: boolean
+  /** Picture-led channels (casual topics) as a grid of tiles instead of a list. */
+  pictureGrid: boolean
   /** Pretext motion: headlines that fly into place, typesetting loaders, the reading orb. Off for plain transitions. */
   pretext: boolean
   /** Within pretext motion: feed headlines settling in on every feed change (moves.ts). */
@@ -177,6 +179,7 @@ export const usePrefs = create<Prefs>()(
       threadColours: false,
       seasonal: true,
       hideRead: false,
+      pictureGrid: false,
       pretext: true,
       feedMotion: false,
       summaryLoader: 'mascot',
