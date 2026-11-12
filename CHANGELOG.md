@@ -1,5 +1,20 @@
 # What's new
 
+## 0.23.0
+
+_Released 12 November 2026_
+
+### New
+
+- **The Lighter side.** A new corner of Explore for when you've read enough news: Eye bleach for cats, dogs and other good animals, Ask for questions people want answered, Conversation, Oddly interesting, Pictures (with Pixelfed photos that reach Mastodon) and Shitposts, for greentexts, cursed images and the rest of the far end of the meme pool. Memes & humour lives there now too, with more meme communities behind it. Nothing here reaches Today or For you unless you follow it.
+- **Videos from PeerTube.** PeerTube is the fediverse's own video hosting, run on hundreds of independent servers. Eye bleach now has its animal videos and Memes & humour its comedy, found across servers with Sepia Search. They play right in PaperWing from the video's own server, and their comments open like any other discussion.
+- **Photos from Pixelfed.** Pixelfed is the fediverse's answer to Instagram. Pictures now shows what's trending on pixelfed.social each day, and Eye bleach its cats, right in the list. Pixelfed doesn't let anyone read comments without an account, so a post opens on Pixelfed itself.
+- **Something nice, and a picture grid.** At the end of Today, and after a story about world news or politics, tap Something nice for one picture from Eye bleach: a cat, a dog, a good animal, then back to your day. Picture-led channels like Eye bleach, Pictures, Memes & humour and Shitposts can also be shown as a grid of tiles, image-board style, with the switch at the top of the list.
+
+### Improved
+
+- **Questions, descriptions and the week's best.** In Ask, a question shows in full and says when nobody has answered it yet, if you fancy being first. Pictures in jokes, Something nice and posts you open have an ALT button for their description, where memes often hide the punchline, or say plainly that nobody described them. And Top in Memes & humour, Shitposts, Eye bleach, Oddly interesting and Pictures is now the best of the week.
+
 ## 0.22.0
 
 _Released 12 November 2026_
