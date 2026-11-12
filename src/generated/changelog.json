@@ -1,6 +1,32 @@
 {
-  "version": "0.21.0",
+  "version": "0.22.0",
   "releases": [
+    {
+      "version": "0.22.0",
+      "date": "12 November 2026",
+      "sections": [
+        {
+          "kind": "new",
+          "title": "New",
+          "changes": [
+            {
+              "title": "A little more humour in your day.",
+              "detail": "Follow Memes & humour in Explore for memes, comics and jokes from Lemmy and Bluesky, or add it to a mix. Short jokes and uncropped pictures appear right in the list, and jokes can rise without needing a busy comment thread."
+            }
+          ]
+        },
+        {
+          "kind": "fix",
+          "title": "Fixes",
+          "changes": [
+            {
+              "title": "Content warnings cover quoted posts too.",
+              "detail": "A post quoted behind a content warning no longer shows its words in the list, and a quoted post's own labels now count: one flagged for graphic or adult content is covered or hidden by your warning settings, even when the post quoting it isn't flagged."
+            }
+          ]
+        }
+      ]
+    },
     {
       "version": "0.21.0",
       "date": "8 November 2026",
