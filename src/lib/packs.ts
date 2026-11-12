@@ -19,6 +19,7 @@ export const GENERAL_TOPICS: Topic[] = [
   {
     id: 'humour',
     label: 'Memes & humour',
+    casual: true,
     hue: 45,
     cluster: 'culture',
     blurb: 'Memes, shitposts, comics and jokes from people being funny on the open web',

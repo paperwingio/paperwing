@@ -39,6 +39,14 @@ describe('humour ranking', () => {
     }
   })
 
+  it('ranks any casual topic the way it ranks humour, and only casual ones', () => {
+    const cats = { id: 'cats', label: 'Cats', hue: 30, cluster: 'culture' as const, blurb: '', terms: ['caturday'], related: [], feeds: [] }
+    const post = s('bs-cat', null, 150, { source: 'bluesky', sourceLabel: 'Bluesky', title: 'Happy caturday' })
+    const news = s('hn-news', 'https://example.com/news', 100)
+    expect(merge([[news], [post]], { sort: 'hot', filters, extraTopics: [{ ...cats, casual: true }] }).map((r) => r.key)).toEqual(['bs-cat', 'hn-news'])
+    expect(merge([[news], [post]], { sort: 'hot', filters, extraTopics: [cats] }).map((r) => r.key)).toEqual(['hn-news', 'bs-cat'])
+  })
+
   it('keeps curated humour provenance when another source found the same link first', () => {
     const post = s('bs-plain', 'https://example.com/meme', 150, { source: 'bluesky', sourceLabel: 'Bluesky', title: 'Works on my machine' })
     const curated = { ...post, key: 'bs-curated', url: 'https://example.com/meme?utm_source=feed', sourceLabel: 'LMAO (Comedy/Humor)' }

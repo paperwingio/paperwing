@@ -16,7 +16,7 @@ import { stateOf, useLibrary } from '../lib/library'
 import { isWatching, useWatch } from '../lib/watch'
 import { domainKey, type Ranked } from '../lib/rank'
 import { useImpression } from '../lib/impressions'
-import { topicsForStory } from '../lib/topics'
+import { isCasual, topicsForStory } from '../lib/topics'
 import { LESSON, useActivity, usePrefs } from '../lib/store'
 import { castVote, storyVote, useAccounts, useVoted } from '../lib/accounts'
 import { rowOutlets } from '../lib/coverage'
@@ -60,10 +60,10 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const pending = useLibrary((l) => !!l.pending[s.key])
   const domain = domainOf(s.url)
   const topics = s.topics.filter((t) => t !== hideTopic).slice(0, 2)
-  const humour = s.topics.includes('humour')
+  const casual = isCasual(s.topics)
   const plain = showExcerpts && s.text && EXCERPT_SOURCES.has(s.source) ? plainText(s.text) : undefined
   const words =
-    humour && !s.url && showExcerpts && s.text && !(cover && !s.warnMediaOnly)
+    casual && !s.url && showExcerpts && s.text && !(cover && !s.warnMediaOnly)
       ? s.text
           .split(/<br\s*\/?>|<\/p>/gi)
           .map(plainText)
@@ -79,7 +79,7 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
   const vote = useActivity((a) => a.votes[s.key])
   const swipeRef = useSwipeActions<HTMLDivElement>({ right: swipe?.right?.[1] ?? (() => void toggleSaved(s)), left: swipe?.left?.[1] ?? (() => hideStory(s.key, s)) })
   const comments = s.comments ?? 0
-  const inlineMedia = humour && thumbnails && !saveData && !cover ? s.media : undefined
+  const inlineMedia = casual && thumbnails && !saveData && !cover ? s.media : undefined
   const thumb = thumbnails && !inlineMedia?.length ? thumbFor(s) : undefined
   const also = [...new Set(s.alsoOn.map(sourceLabel))]
   // Other outlets' takes on the same event: what the feed grouped, plus a news search already run for it.
@@ -182,10 +182,10 @@ export const StoryRow = memo(function StoryRow({ story: s, selected, read, onOpe
             )}
             {s.quote && !s.quote.gone && showExcerpts && !(cover && !s.warnMediaOnly) && (
               <div className="row-quote mt-1 text-[0.8125rem] leading-snug text-ink-3">
-                <p className={humour ? undefined : 'line-clamp-2'}>
+                <p className={casual ? undefined : 'line-clamp-2'}>
                   Quoting <span className="font-semibold text-ink-2">@{s.quote.author}</span>: {plainText(s.quote.html)}
                 </p>
-                {humour && thumbnails && !saveData && !cover && s.quote.media && (
+                {casual && thumbnails && !saveData && !cover && s.quote.media && (
                   <div className="mt-2 space-y-3" onClick={(e) => e.stopPropagation()}>
                     {s.quote.media.map((m, i) => (
                       <MediaGallery key={i} media={[m]} href={s.quote?.url} />

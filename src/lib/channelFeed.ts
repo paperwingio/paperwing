@@ -5,7 +5,7 @@ import { momentumOf } from './momentum'
 import { merge, type Memory, type Ranked, type SortMode } from './rank'
 import { feedId, feedLabel, newestOf } from './sources'
 import type { BlueskyFeed, CustomFeed, FollowedMix, Interest, LemmyCommunity, Mix } from './store'
-import { matchesTopic, storyText, TOPIC_BY_ID, type FeedRef, type Topic } from './topics'
+import { CURATED_FEEDS, matchesTopic, storyText, type FeedRef, type Topic } from './topics'
 import type { Story } from './types'
 
 // The channel feed: from a reader and a channel to the stories it shows, in order. Every page that
@@ -129,10 +129,8 @@ export function rankChannel(plan: ChannelPlan, reader: Reader, batches: (Story[]
     // Keyword searches are noisy: keep only results that really are about the topic they were run for.
     if (topics.length) data = data.filter((s) => topics.some((t) => matchesTopic(t, storyText(s))))
     const ref = f.ref
-    if (ref.kind === 'bskyFeed') {
-      const curated = TOPIC_BY_ID.get('humour')?.feeds.find((b) => b.kind === 'bskyFeed' && b.uri === ref.uri)
-      if (curated?.kind === 'bskyFeed') data = data.map((s) => ({ ...s, sourceLabel: curated.name }))
-    }
+    const curated = ref.kind === 'bskyFeed' ? CURATED_FEEDS.get(ref.uri) : undefined
+    if (curated) data = data.map((s) => ({ ...s, sourceLabel: curated }))
     if (f.ref.kind === 'boardpicks') data = unsuggestJoined(data, joined)
     if (!reader.announcements) data = withoutAnnouncements(data, forYou)
     // On a board's own page, every post is from it: no need to say so.

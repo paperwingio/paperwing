@@ -92,10 +92,22 @@ export interface Topic {
   mastodon?: string[]
   /** Status pages whose incidents belong here, by id from api/_lib/statuspages.ts; 'all' for every one. */
   status?: string[] | 'all'
+  /**
+   * Read for fun, not news: likes count without needing replies, social posts aren't treated as
+   * commentary, and rows show short posts and pictures in full.
+   */
+  casual?: boolean
 }
 
 export const TOPICS: Topic[] = [...TECH_TOPICS, ...GENERAL_TOPICS]
 export const TOPIC_BY_ID = new Map(TOPICS.map((t) => [t.id, t]))
+
+const CASUAL = new Set(TOPICS.filter((t) => t.casual).map((t) => t.id))
+/** Whether any of a story's topics is read for fun (see `Topic.casual`). */
+export const isCasual = (topics: readonly string[]) => topics.some((t) => CASUAL.has(t))
+
+/** Curated Bluesky feeds by URI, with the name a topic gives them: their posts are labelled with it. */
+export const CURATED_FEEDS = new Map(TOPICS.flatMap((t) => t.feeds.flatMap((f) => (f.kind === 'bskyFeed' ? [[f.uri, f.name] as const] : []))))
 
 /** Whether a topic belongs to the tech pack: a free-text interest counts as neither. */
 export const isTechTopic = (id: string) => {
