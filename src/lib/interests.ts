@@ -138,6 +138,7 @@ export const INTEREST_TOPICS: Topic[] = [
     terms: ['birdwatching', 'birding', 'birders?', 'bird identification', 'bird migration', 'bird feeders?', 'songbirds?', 'shorebirds?', 'seabirds?', 'eBird'],
     related: ['ecology', 'gardening', 'photography'],
     mastodon: ['birding', 'birdwatching'],
+    bsky: [{ uri: 'at://did:plc:ffkgesg3jsv2j7aagkzrtcvt/app.bsky.feed.generator/aaagllxbcbsje', name: 'Birds!' }],
     feeds: [rss('https://www.allaboutbirds.org/news/feed/', 'All About Birds')],
   },
   {

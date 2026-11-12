@@ -6,9 +6,9 @@ import { gzipSync } from 'node:zlib'
 // Raise a budget only on purpose, in the same change that needs it, and say why in the PR.
 const BUDGET_KB = {
   // ~276.8 KB once marked and DOMPurify left for the reader and composer; held there.
-  entry: 280, // index.html's script and everything it statically imports
+  entry: 281, // index.html's script and everything it statically imports; +1 KB for the Lighter side catalogue (topics tag the first feed), measured ~280.7 KB
   css: 25, // the wordmark's face is inlined (~5 KB) in place of a 121 KB font file
-  totalJs: 579, // +1 KB for curated humour and inline jokes, pictures and quotes; baseline ~577.5 KB. Every chunk is precached; first-load budgets stay fixed.
+  totalJs: 580, // +1 KB for curated humour and inline jokes, pictures and quotes, +1 KB for the Lighter side catalogue; measured ~579.8 KB. Every chunk is precached; first-load budgets stay fixed.
 }
 
 const dist = process.argv[2] ?? 'dist'

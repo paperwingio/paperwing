@@ -145,6 +145,8 @@ export function rankChannel(plan: ChannelPlan, reader: Reader, batches: (Story[]
     momentum: momentumOf(checked.map((stories, i) => ({ stories, at: fetchedAt[i] || Date.now() }))),
     // For you takes a few strong stories from outside your usual.
     explore: forYou,
+    // A casual topic's keywords count on its own page and for a reader who follows it: a #shitpost post there is a shitpost.
+    own: [plan.channel.topic, ...reader.followed.map((id) => findTopic(id, reader.interests))].filter((t): t is Topic => !!t?.casual),
   })
 }
 
@@ -158,14 +160,18 @@ function withoutAnnouncements(data: Story[], forYou: boolean): Story[] {
 }
 
 /** Any batches of stories (search results, say), moderated and ranked for the reader the way a channel is. */
-export function rankStories(reader: Reader, batches: Story[][], opts: { sort: SortMode; native?: boolean; boost?: string[]; momentum?: Record<string, number>; explore?: boolean }): Ranked[] {
+export function rankStories(
+  reader: Reader,
+  batches: Story[][],
+  opts: { sort: SortMode; native?: boolean; boost?: string[]; momentum?: Record<string, number>; explore?: boolean; own?: Topic[] },
+): Ranked[] {
   const moderated = batches.map((b) => b.flatMap((s) => moderateStory(s, reader.labelers, reader.warnings) ?? []))
   const { memory, affinity, votes } = reader.taste()
   return merge(moderated, {
     sort: opts.sort,
     native: opts.native,
     boost: opts.boost,
-    extraTopics: allTopics(reader.interests).filter((t) => t.id.startsWith('q:')),
+    extraTopics: [...allTopics(reader.interests).filter((t) => t.id.startsWith('q:')), ...(opts.own ?? [])],
     filters: { mutedWords: reader.mutedWords, mutedDomains: reader.mutedDomains, hidden: reader.hidden },
     memory,
     momentum: opts.momentum,

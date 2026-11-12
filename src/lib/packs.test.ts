@@ -1,20 +1,75 @@
 import { describe, expect, it } from 'vitest'
 import { resolveChannel } from './channels'
+import { planChannel, rankChannel } from './channelFeed'
 import { parseLemmyKey, lemmyKey } from './lemmyKey'
 import { CLUSTERS, isTechTopic, matchesTopic, searchTopics, TOPIC_BY_ID, TOPICS, topicsForStory } from './topics'
 import type { Story } from './types'
+import { testReader } from '../test/fixtures'
 
 const base = { followed: [] as string[], interests: [], customFeeds: [] }
 const story = (title: string): Story => ({ key: 'x', source: 'rss', sourceLabel: 'Somewhere', title, url: null, discussionUrl: null, createdAt: 0, hasThread: false })
 
 describe('humour readers', () => {
-  it.each(['memes', 'humor', 'shitposting', 'comedy', 'programming humour'])('finds the humour topic by %s', (query) => {
+  it.each(['memes', 'humor', 'comedy', 'programming humour'])('finds the humour topic by %s', (query) => {
     expect(searchTopics(query)[0]?.topic.id).toBe('humour')
   })
 
   it('tags jokes from dedicated communities, without tagging news about memes', () => {
     expect(topicsForStory({ ...story('Works on my machine'), source: 'lemmy', sourceLabel: 'c/programmer_humor' })).toContain('humour')
     expect(topicsForStory(story('How memes and humour shape political campaigns'))).not.toContain('humour')
+  })
+})
+
+describe('lighter side readers', () => {
+  it.each([
+    ['shitposting', 'shitposts'],
+    ['cute animals', 'eye-bleach'],
+    ['no stupid questions', 'ask'],
+    ['shower thoughts', 'conversation'],
+    ['today i learned', 'oddly-interesting'],
+    ['pixelfed', 'pictures'],
+  ])('finds %s', (query, id) => {
+    expect(searchTopics(query)[0]?.topic.id).toBe(id)
+  })
+
+  it('groups every lighter topic under the Lighter side, in the general pack', () => {
+    const lighter = TOPICS.filter((t) => t.cluster === 'lighter').map((t) => t.id)
+    expect(lighter).toEqual(expect.arrayContaining(['humour', 'shitposts', 'eye-bleach', 'ask', 'conversation', 'oddly-interesting', 'pictures']))
+    expect(CLUSTERS.lighter.pack).toBe('general')
+    expect(lighter.some(isTechTopic)).toBe(false)
+  })
+
+  it.each([
+    ['c/aww', 'eye-bleach'],
+    ['c/196', 'shitposts'],
+    ['c/asklemmy', 'ask'],
+    ['c/showerthoughts', 'conversation'],
+    ['c/mildlyinteresting', 'oddly-interesting'],
+    ['c/pics', 'pictures'],
+  ])('tags whatever %s posts as %s', (sourceLabel, id) => {
+    expect(topicsForStory({ ...story('Look at this'), source: 'lemmy', sourceLabel })).toContain(id)
+  })
+
+  it('counts a fun topic’s keywords only on its own page, so they never make a news story casual', () => {
+    const post = { ...story('Pixelfed is having a moment'), source: 'mastodon' as const, sourceLabel: 'Mastodon', tags: ['shitpost', 'caturday'] }
+    expect(topicsForStory(post).some((t) => ['pictures', 'shitposts', 'eye-bleach'].includes(t))).toBe(false)
+    expect(topicsForStory(post, [TOPIC_BY_ID.get('shitposts')!])).toContain('shitposts')
+    const plan = planChannel(testReader(), 'shitposts', { sort: 'hot', blueskyEnabled: true })!
+    const ranked = rankChannel(
+      plan,
+      testReader(),
+      plan.feeds.map((f) => (f.ref.kind === 'mastodon' ? [{ ...post, key: 'md-x-1' }] : [])),
+    )
+    expect(ranked.find((r) => r.key === 'md-x-1')?.topics).toContain('shitposts')
+    const forYou = planChannel(testReader({ followed: ['shitposts'] }), 'for-you', { sort: 'hot', blueskyEnabled: true })!
+    const batches = forYou.feeds.map((_, i) => (i === 0 ? [{ ...post, key: 'md-x-2' }] : []))
+    expect(rankChannel(forYou, testReader({ followed: ['shitposts'] }), batches).find((r) => r.key === 'md-x-2')?.topics).toContain('shitposts')
+  })
+
+  it('tags posts from a curated Bluesky feed, and a hashtag on its own page, by their topic', () => {
+    expect(topicsForStory({ ...story('Meet Biscuit'), source: 'bluesky', sourceLabel: 'Dogs of Bluesky' })).toContain('eye-bleach')
+    expect(topicsForStory({ ...story('Sunday nap'), source: 'mastodon', sourceLabel: 'Mastodon', tags: ['caturday'] }, [TOPIC_BY_ID.get('eye-bleach')!])).toContain('eye-bleach')
+    expect(topicsForStory(story('The cat economy is booming, say analysts'))).not.toContain('eye-bleach')
   })
 })
 

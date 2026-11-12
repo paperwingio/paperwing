@@ -39,7 +39,7 @@ export type FeedRef =
   /** One state's WARN notices (layoff filings) from employers PaperWing follows, by its two-letter code. */
   | { kind: 'warn'; state: string }
 
-export type ClusterId = 'intelligence' | 'systems' | 'code' | 'world' | 'news' | 'science' | 'culture' | 'sport' | 'making' | 'life'
+export type ClusterId = 'intelligence' | 'systems' | 'code' | 'world' | 'news' | 'science' | 'culture' | 'sport' | 'making' | 'life' | 'lighter'
 
 /** Topics come in packs: tech (where PaperWing started) and everything else. */
 export type Pack = 'tech' | 'general'
@@ -51,6 +51,7 @@ export const CLUSTERS: Record<ClusterId, { label: string; blurb: string; pack: P
   sport: { label: 'Sport', blurb: 'Find your sport, follow your team or try something new', pack: 'general' },
   making: { label: 'Making', blurb: 'Tools, textiles, circuits and things people build', pack: 'general' },
   life: { label: 'Life', blurb: 'The everyday good stuff', pack: 'general' },
+  lighter: { label: 'Lighter side', blurb: 'Memes, questions, good animals and the odd thing worth a look', pack: 'general' },
   intelligence: { label: 'Intelligence', blurb: 'Models, agents, papers and the hardware under them', pack: 'tech' },
   systems: { label: 'Systems', blurb: 'Running software in production and knowing what it is doing', pack: 'tech' },
   code: { label: 'Code', blurb: 'Languages, craft and the open source commons', pack: 'tech' },
@@ -230,7 +231,9 @@ export function topicsForStory(s: Story, extra: Topic[] = []): string[] {
   // A copy: callers add to it (a cluster's leader takes its members' topics).
   if (cached) return [...cached]
   const found = new Set(DEDICATED.get(s.sourceLabel.toLowerCase()) ?? [])
-  for (const t of [...TOPICS, ...extra]) if (!found.has(t.id) && matchesTopic(t, text)) found.add(t.id)
+  // A casual topic changes how a story ranks and looks, so its keywords (#shitpost, #caturday) only
+  // count on its own page, which passes it in `extra`; elsewhere only its own sources carry it.
+  for (const t of [...TOPICS, ...extra]) if (!found.has(t.id) && !(t.casual && !extra.some((e) => e.id === t.id)) && matchesTopic(t, text)) found.add(t.id)
   const topics = [...found]
   if (storyTopics.size > 5000) storyTopics.clear()
   storyTopics.set(key, topics)
